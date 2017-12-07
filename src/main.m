@@ -7,7 +7,7 @@ run('parameters.m');
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
     kitti_path = '../datasets/kitti';
-    assert(exist('../datasets/kitti', 'dir') ~= 0);
+    assert(exist('../datasets/kitti', 'dir') ~= 0, 'Kitti dataset not found');
     ground_truth = load([kitti_path '/poses/00.txt']);
     ground_truth = ground_truth(:, [end-8 end]);
     last_frame = 4540;
@@ -17,7 +17,7 @@ if ds == 0
 elseif ds == 1
     % Path containing the many files of Malaga 7.
     malaga_path = '../datasets/malaga';
-    assert(exist(malaga_path, 'dir') ~= 0);
+    assert(exist(malaga_path, 'dir') ~= 0, 'Malaga dataset not found');
     images = dir([malaga_path ...
         '/malaga-urban-dataset-extract-07_rectified_800x600_Images']);
     left_images = images(3:2:end);
@@ -28,7 +28,7 @@ elseif ds == 1
 elseif ds == 2
     % Path containing images, depths and all...
     parking_path = '../datasets/parking';
-    assert(exist(parking_path, 'dir') ~= 0);
+    assert(exist(parking_path, 'dir') ~= 0, 'Parking dataset not found');
     last_frame = 598;
     K = load([parking_path '/K.txt']);
      
@@ -38,13 +38,17 @@ else
     assert(false);
 end
 
+%put ground truth info into a viewSet
+groundTruth = viewSet;
+for i = 1:length(ground_truth)
+    groundTruth = addView(groundTruth, i, ...
+       'Orientation', eye(3), 'Location', [ground_truth(i,1), ground_truth(i,2), 0]);
+end
+
 
 %create cameraParams object
 cameraParams = cameraParameters('IntrinsicMatrix', K);
 clear K;
-
-
-
 
 %% 	BOOTSTRAP
 
@@ -84,24 +88,43 @@ vSet = viewSet;
 viewId = 1; 
 vSet = addView(vSet, viewId, 'Points', points_0, 'Orientation', eye(3), 'Location', [0 0 0]);
  
-% TODO: cant leave like this since we dont know method from 'estimateEssentialMatrix'
+
 % estimate pose 
 matchedPoints_0 = points_0(indexPairs(:,1));
 matchedPoints_1 = points_1(indexPairs(:,2));
 
-[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0,...
-                                         matchedPoints_1, cameraParams);
+% estimate Fundamental Matrix
+% this function uses RANSAC and the 8-point algorithm
+[F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
+                 'Method','RANSAC', 'DistanceThreshold', ransac.distanceThreshold, ... 
+                 'Confidence',ransac.confidence, 'NumTrials', ransac.numTrials);
+             
+E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix; 
+
+% get only matched pairs that are inliers
 indexPairs = indexPairs(inlierIdx, :);
 
-% Get the epipolar inliers.
+% Get the inlier points in each image
 inlierPoints_0 = matchedPoints_0(inlierIdx, :);
-inlierPoints_1 = matchedPoints_1(inlierIdx, :);    
+inlierPoints_1 = matchedPoints_1(inlierIdx, :);
+
+
+%Plot bootstrap matches
+figure();
+imshow(I_0); 
+hold on;
+plotMatches(matchedPoints_0, matchedPoints_1);  
+
     
 % Compute the camera pose from the fundamental matrix. Use half of the
 % points to reduce computation.
 [orient, loc, validPointFraction] = ...
         relativeCameraPose(E, cameraParams, inlierPoints_0(1:2:end, :),...
         inlierPoints_1(1:2:end, :));
+    
+ if(validPointFraction < 0.9) 
+     disp('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
+ end
 
 
 % Add the current view to the view set.
@@ -110,5 +133,13 @@ vSet = addView(vSet, viewId, 'Points', points_1, 'Orientation', orient, ...
     'Location', loc);
 % Store the point matches between the previous and the current views.
 vSet = addConnection(vSet, viewId-1, viewId, 'Matches', indexPairs);
+
+%% Setup Camera/Trajectory plot
+[camActual, camEstimated, trajActual, trajEstimated] = setupCamTrajectoryPlot(vSet, groundTruth); 
+
+
+% update Camera/Trajectory plot
+updateCamTrajectoryPlot(viewId, vSet.poses, groundTruth.poses, trajEstimated, trajActual, ...
+                        camEstimated, camActual)
 
     
