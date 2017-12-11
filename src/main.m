@@ -38,10 +38,15 @@ else
     assert(false);
 end
 
-%put ground truth info into a viewSet
-groundTruth = viewSet;
+%create global data object
+globalData.vSet = viewSet;     % viewSet with estimated data
+globalData.actualVSet = viewSet;        % viewSet with ground truth
+globalData.xyzPoints = [];              % 3D pointcloud (Nx3 matrix)
+
+
+%put ground truth info into a realVSet
 for i = 1:length(ground_truth)
-    groundTruth = addView(groundTruth, i, ...
+    globalData.actualVSet = addView(globalData.actualVSet, i, ...
        'Orientation', eye(3), 'Location', [ground_truth(i,1), ground_truth(i,2), 0]);
 end
 
@@ -52,19 +57,15 @@ clear K;
 
 %% 	BOOTSTRAP
 
-% Create a ViewSet object with initial orientation and location
-vSet = viewSet; 
-
 % run bootstrap: Estimating the pose of the second view relative to the first view
-[vSet,viewId] = bootstrap_wrapper(cameraParams, vSet);
+[globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
 %% Setup Camera/Trajectory plot
-[camActual, camEstimated, trajActual, trajEstimated] = setupCamTrajectoryPlot(vSet, groundTruth); 
+[trajActualPlot, trajEstimatedPlot, camPlot] = setupCamTrajectoryPlot(globalData); 
 
 
 % update Camera/Trajectory plot
-updateCamTrajectoryPlot(viewId, vSet.poses, groundTruth.poses, trajEstimated, trajActual, ...
-                        camEstimated, camActual)
+updateCamTrajectoryPlot(viewId, globalData, trajActualPlot, trajEstimatedPlot, camPlot);
 
 
 %% Continuous operation

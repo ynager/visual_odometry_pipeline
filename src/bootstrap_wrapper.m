@@ -1,4 +1,4 @@
-function [vSet, viewId] = bootstrap_wrapper(cameraParams, vSet)
+function [globalData, viewId] = bootstrap_wrapper(cameraParams, globalData)
 %BOOTSTRAP Estimating the pose of the second view relative to the first view.
 %Estimate the pose of the second view by estimating the essential matrix and
 %decomposing it into camera location and orientation. Triangulation of
@@ -6,10 +6,11 @@ function [vSet, viewId] = bootstrap_wrapper(cameraParams, vSet)
 %
 %   input:
 %       camearParams: Object for storing camera parameters
-%       vSet: an instance of viewSet
+%       globalData: Object containing actual and estimated viewSets and
+%       xyzPoints
 %
 %   output:
-%       vSet: updated vSet of input
+%       globalData: updated globalData
 %       state_first: struct containing first state of camera
 %           state_first.keypoints: denoted as P in pdf
 %           state_first.landmarks: denoted as X in pdf
@@ -73,9 +74,8 @@ hold on;
 plot(points_0); 
 
 viewId = 1; 
-vSet = addView(vSet, viewId, 'Points', points_0, 'Orientation', eye(3), 'Location', [0 0 0]);
+globalData.vSet = addView(globalData.vSet, viewId, 'Points', points_0, 'Orientation', eye(3), 'Location', [0 0 0]);
  
-
 % estimate pose 
 matchedPoints_0 = points_0(indexPairs(:,1));
 matchedPoints_1 = points_1(indexPairs(:,2));
@@ -116,10 +116,10 @@ plotMatches(matchedPoints_0, matchedPoints_1);
 
 % Add the current view to the view set.
 viewId = 2;
-vSet = addView(vSet, viewId, 'Points', points_1, 'Orientation', orient, ...
-    'Location', loc);
+globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc);
+
 % Store the point matches between the previous and the current views.
-vSet = addConnection(vSet, viewId-1, viewId, 'Matches', indexPairs);
+% globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
 
 
 end
