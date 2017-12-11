@@ -1,6 +1,7 @@
-function [state_curr, pose_curr, vSet] = processFrame_wrapper(I_curr, I_prev, ...
-                                                state_prev, KLT_keypointsTracker, ...
-                                                KLT_candidateKeypointsTracker, cameraParams)
+function [currState, currPose, vSet] = processFrame_wrapper(I_curr, I_prev, ...
+                                                prevState, KLT_keypointsTracker, ...
+                                                KLT_candidateKeypointsTracker, cameraParams, ...
+                                                globalData)
 %PROCESSFRAME_WRAPPER After bootstrap: Estimating remaining camera trajectory
 %1. Associate keypoints in the current frame to previously triangulated landmarks.
 %2. Based on this, estimate the current camera pose.
@@ -8,21 +9,32 @@ function [state_curr, pose_curr, vSet] = processFrame_wrapper(I_curr, I_prev, ..
 %landmarks.
 %
 %   input:
+%
 %       camearParams: Object for storing camera parameters
+%
 %       vSet: an instance of viewSet
+%
 %       I_curr/prev: image of previous and current step (for descriptors)
-%       state_prev: previous state, for details see state_curr below
+%
+%       prevState: previous state, for details see currState below
+%
 %       KLT_keypointsTracker, KLT_candidateKeypointsTracker:
 %           objects of vision.pointTracker to track keypoints and candidate
 %           keypoints by KLT algorithm
 %
+%       globalData: struct containting the following
+%           globalData.vSet = viewSet; viewSet with estimated data
+%           globalData.actualVSet = viewSet; viewSet with ground truth
+%           globalData.landmarks = []; 3D pointcloud (Nx3 matrix)
+%
 %   output:
-%       state_curr: struct containing current state of camera
-%           state_curr.keypoints: denoted as P in pdf
-%           state_curr.landmarks: denoted as X in pdf
-%           state_curr.candidate_kp: candidate keypoint, denoted as C in pdf
-%           state_curr.first_obs: first observation of track of keypoint, denoted as F in pdf
-%           state_curr.pose_first_obs: pose of first observation above, denoted as T in pdf
+%
+%       currState: struct containing current state of camera
+%           currState.keypoints: denoted as P in pdf
+%           currState.landmarks: denoted as X in pdf
+%           currState.candidate_kp: candidate keypoint, denoted as C in pdf
+%           currState.first_obs: first observation of track of keypoint, denoted as F in pdf
+%           currState.pose_first_obs: pose of first observation above, denoted as T in pdf
 %
 %       vSet: updated vSet of input
 %
@@ -75,14 +87,14 @@ end
 % (in triangulation: check alpha value threshold)
 
 
-state_curr = struct([]); 
-state_curr.keypoints = [];
-state_curr.landmarks = [];
-state_curr.candidate_kp = [];
-state_curr.first_obs = [];
-state_curr.pose_first_obs = [];
+currState = struct([]); 
+currState.keypoints = [];
+currState.landmarks = [];
+currState.candidate_kp = [];
+currState.first_obs = [];
+currState.pose_first_obs = [];
 
-pose_curr=1;
+currPose=1;
 
 end
 
