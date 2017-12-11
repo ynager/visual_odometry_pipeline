@@ -2,21 +2,18 @@ function [trajActualPlot, trajEstimatedPlot, camPlot] = setupCamTrajectoryPlot(g
 
 figure();
 
-% Setup axes.
-axis([-100, 100, -100, 100, -100, 100]);
-
 % Set Y-axis to be vertical pointing down
 view(gca, 3);
 set(gca, 'CameraUpVector', [0, -1, 0]);
 camorbit(gca, -120, 0, 'data', [0, 1, 0]);
 
 grid on
-xlabel('X (cm)');
-ylabel('Y (cm)');
-zlabel('Z (cm)');
+xlabel('X (m)');
+ylabel('Y (m)');
+zlabel('Z (m)');
 hold on
 
-camsize = 5;
+camsize = 0.5;
 
 % Plot estimated camera pose
 camPlot = plotCamera('Size', camsize, 'Location',...

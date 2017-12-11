@@ -15,3 +15,15 @@ set(trajEstimatedPlot, 'XData', locations(:,1), 'YData', ...
 locationsActual = cat(1, globalData.actualVSet.Views.Location{1:viewId});
 set(trajActualPlot, 'XData', locationsActual(:,1), 'YData', ...
     locationsActual(:,2), 'ZData', locationsActual(:,3));
+
+pcshow(globalData.landmarks,'black', 'MarkerSize', 10); 
+
+% set axis limits 5 meters larger than data
+limsx=get(gca,'XLim');
+set(gca,'Xlim',[limsx(1)-5, limsx(2)+5]); 
+
+limsy=get(gca,'YLim');
+set(gca,'Ylim',[limsy(1)-5, limsy(2)+5]); 
+
+limsz=get(gca,'ZLim');
+set(gca,'Zlim',[limsz(1)-5, limsz(2)+5]); 
