@@ -103,11 +103,9 @@ hold on;
 plotMatches(matchedPoints_0, matchedPoints_1);  
 
     
-% Compute the camera pose from the fundamental matrix. Use half of the
-% points to reduce computation.
+% Compute the camera pose from the fundamental matrix.
 [orient, loc, validPointFraction] = ...
-        relativeCameraPose(E, cameraParams, inlierPoints_0(1:2:end, :),...
-        inlierPoints_1(1:2:end, :));
+        relativeCameraPose(E, cameraParams, inlierPoints_0, inlierPoints_1);
     
  if(validPointFraction < 0.9) 
      disp('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
@@ -122,10 +120,12 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Locat
 % globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
 
 % Triangulate to get 3D points
-cam_matrix_1 = cameraMatrix(cameraParams, eye(3), [0 0 0]);
+cam_matrix_0 = cameraMatrix(cameraParams, eye(3), [0, 0, 0]);
 [R, t] = cameraPoseToExtrinsics(orient, loc);
-cam_matrix_2 = cameraMatrix(cameraParams, R, t);
-xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, cam_matrix_1, cam_matrix_2);
+disp('Translation: '); 
+disp(t); 
+cam_matrix_1 = cameraMatrix(cameraParams, R, t);
+xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, cam_matrix_0, cam_matrix_1);
 
 % Get unmatched candidate keypoints in second frame wich are all
 % elements in points_1 not contained in indexPairs(:,2)
@@ -141,6 +141,12 @@ currState.pose_first_obs = repmat([orient(:); loc(:)], [1, length(candidate_kp)]
 
 % set landmarks
 globalData.landmarks = xyzPoints; 
+
+% delete skipped views in actualVSet
+for i = 2:bootstrap.images(2)-1
+    globalData.actualVSet = deleteView(globalData.actualVSet, i);
+    
+end
 
 end
 

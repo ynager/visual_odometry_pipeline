@@ -9,8 +9,8 @@ bootstrap.det_method = 'harris';
 bootstrap.desc_method = 'HOG';
 
     % harris
-    harris.min_quality = 0.2;
-    harris.num_points = 100; 
+    harris.min_quality = 0.1;
+    harris.num_points = 500; 
     
 
 ransac.numTrials = 2000;

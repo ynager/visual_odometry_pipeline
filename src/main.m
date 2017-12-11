@@ -57,6 +57,8 @@ clear K;
 
 %% 	BOOTSTRAP
 
+globalData.vSet = viewSet;  %erase if anything in there already
+
 % run bootstrap: Estimating the pose of the second view relative to the first view
 [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
