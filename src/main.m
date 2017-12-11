@@ -39,9 +39,9 @@ else
 end
 
 %create global data object
-globalData.vSet = viewSet;     % viewSet with estimated data
+globalData.vSet = viewSet;              % viewSet with estimated data
 globalData.actualVSet = viewSet;        % viewSet with ground truth
-globalData.xyzPoints = [];              % 3D pointcloud (Nx3 matrix)
+globalData.landmarks = [];              % 3D pointcloud (Nx3 matrix)
 
 
 %put ground truth info into a realVSet
@@ -58,7 +58,7 @@ clear K;
 %% 	BOOTSTRAP
 
 % run bootstrap: Estimating the pose of the second view relative to the first view
-[globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
+[currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
 %% Setup Camera/Trajectory plot
 [trajActualPlot, trajEstimatedPlot, camPlot] = setupCamTrajectoryPlot(globalData); 

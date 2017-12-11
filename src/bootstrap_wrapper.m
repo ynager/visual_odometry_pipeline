@@ -1,4 +1,4 @@
-function [globalData, viewId] = bootstrap_wrapper(cameraParams, globalData)
+function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globalData)
 %BOOTSTRAP Estimating the pose of the second view relative to the first view.
 %Estimate the pose of the second view by estimating the essential matrix and
 %decomposing it into camera location and orientation. Triangulation of
@@ -11,12 +11,12 @@ function [globalData, viewId] = bootstrap_wrapper(cameraParams, globalData)
 %
 %   output:
 %       globalData: updated globalData
-%       state_first: struct containing first state of camera
-%           state_first.keypoints: denoted as P in pdf
-%           state_first.landmarks: denoted as X in pdf
-%           state_first.candidate_kp: candidate keypoint, denoted as C in pdf
-%           state_first.first_obs: first observation of track of keypoint, denoted as F in pdf
-%           state_first.pose_first_obs: pose of first observation above, denoted as T in pdf
+%       currState: struct containing first state of camera
+%           currState.keypoints: denoted as P in pdf
+%           currState.landmarks: denoted as X in pdf
+%           currState.candidate_kp: candidate keypoint, denoted as C in pdf
+%           currState.first_obs: first observation of track of keypoint, denoted as F in pdf
+%           currState.pose_first_obs: pose of first observation above, denoted as T in pdf
 
 % TODOs: 
 % -(maybe) use viewSet only for visualization. for Pose, landmarks storage
@@ -121,6 +121,26 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Locat
 % Store the point matches between the previous and the current views.
 % globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
 
+% Triangulate to get 3D points
+cam_matrix_1 = cameraMatrix(cameraParams, eye(3), [0 0 0]);
+[R, t] = cameraPoseToExtrinsics(orient, loc);
+cam_matrix_2 = cameraMatrix(cameraParams, R, t);
+xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, cam_matrix_1, cam_matrix_2);
+
+% Get unmatched candidate keypoints in second frame wich are all
+% elements in points_1 not contained in indexPairs(:,2)
+candidate_kp_ind = setdiff(1:length(points_1.Location),indexPairs(:,2));
+candidate_kp = points_1.Location(candidate_kp_ind,:);
+
+% Generate initial state
+currState.keypoints = inlierPoints_1.Location'; 
+currState.landmarks = xyzPoints'; 
+currState.candidate_kp = candidate_kp'; 
+currState.first_obs = candidate_kp';
+currState.pose_first_obs = repmat([orient(:); loc(:)], [1, length(candidate_kp)]);
+
+% set landmarks
+globalData.landmarks = xyzPoints; 
 
 end
 
