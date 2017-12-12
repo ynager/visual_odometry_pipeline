@@ -68,11 +68,7 @@ end
 % Match features between first and second image.
 indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true);
 
-% Plot
-imshow(I_0);
-hold on;
-plot(points_0); 
-
+% Add to vSet
 viewId = 1; 
 globalData.vSet = addView(globalData.vSet, viewId, 'Points', points_0, 'Orientation', eye(3), 'Location', [0 0 0]);
  
@@ -97,10 +93,7 @@ inlierPoints_1 = matchedPoints_1(inlierIdx, :);
 
 
 %Plot bootstrap matches
-figure();
-imshow(I_0); 
-hold on;
-plotMatches(matchedPoints_0, matchedPoints_1);  
+plotMatches(matchedPoints_0, matchedPoints_1, I_0, I_1);  
 
     
 % Compute the camera pose from the fundamental matrix.
@@ -108,7 +101,7 @@ plotMatches(matchedPoints_0, matchedPoints_1);
         relativeCameraPose(E, cameraParams, inlierPoints_0, inlierPoints_1);
     
  if(validPointFraction < 0.9) 
-     disp('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
+     fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
  end
 
 
@@ -119,32 +112,43 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Locat
 % Store the point matches between the previous and the current views.
 % globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
 
-% Triangulate to get 3D points
-cam_matrix_0 = cameraMatrix(cameraParams, eye(3), [0, 0, 0]);
-[R, t] = cameraPoseToExtrinsics(orient, loc);
-disp('Translation: '); 
-disp(t); 
-cam_matrix_1 = cameraMatrix(cameraParams, R, t);
-xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, cam_matrix_0, cam_matrix_1);
+%% Triangulate to get 3D points
 
+% Get 2 possible rotation matrices and a translation vector
+[Rots, u3] = decomposeEssentialMatrix(E);
+
+% Disambiguate invalid configurations (makes sure majority of points lie in
+% front of camera) 
+[R,T] = disambiguateRelativePose(Rots,u3,inlierPoints_0, inlierPoints_1,cameraParams);
+
+% calculate camera matrices
+M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
+M2 = cameraParams.IntrinsicMatrix * [R, T];
+
+% triangulate
+xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
+
+%% Generate initial state
 % Get unmatched candidate keypoints in second frame wich are all
 % elements in points_1 not contained in indexPairs(:,2)
 candidate_kp_ind = setdiff(1:length(points_1.Location),indexPairs(:,2));
 candidate_kp = points_1.Location(candidate_kp_ind,:);
 
-% Generate initial state
-currState.keypoints = inlierPoints_1.Location'; 
-currState.landmarks = xyzPoints'; 
-currState.candidate_kp = candidate_kp'; 
-currState.first_obs = candidate_kp';
-currState.pose_first_obs = repmat([orient(:); loc(:)], [1, length(candidate_kp)]);
+currState.keypoints = inlierPoints_1.Location; 
+currState.landmarks = xyzPoints; 
+currState.candidate_kp = candidate_kp; 
+currState.first_obs = candidate_kp;
+currState.pose_first_obs = repmat([orient(:); loc(:)], [length(candidate_kp), 1]);
 
-% set landmarks
+%% update landmarks and actualVSet in globalData
 globalData.landmarks = xyzPoints; 
 
 % delete skipped views in actualVSet
 for i = 2:bootstrap.images(2)-1
-    globalData.actualVSet = deleteView(globalData.actualVSet, i);
+    try
+        globalData.actualVSet = deleteView(globalData.actualVSet, i);
+    catch
+    end
     
 end
 

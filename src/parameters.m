@@ -1,7 +1,7 @@
 % Parameters File
 
 % dataset (0: KITTI, 1: Malaga, 2: parking)
-ds = 2;
+ds = 0;
 
 % bootstrap images
 bootstrap.images = [1,3]; 
@@ -10,11 +10,11 @@ bootstrap.desc_method = 'HOG';
 
     % harris
     harris.min_quality = 0.1;
-    harris.num_points = 500; 
+    harris.num_points = 200; 
     
 
-ransac.numTrials = 2000;
-ransac.distanceThreshold = 0.008; 
+ransac.numTrials = 5000;
+ransac.distanceThreshold = 0.01; 
 ransac.confidence = 99.9; 
 
 % continuous operation
