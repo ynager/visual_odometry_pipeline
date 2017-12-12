@@ -1,7 +1,9 @@
-function plotMatches(matchedPoints_0, matchedPoints_1)
+function plotMatches(matchedPoints_0, matchedPoints_1, I_0, I_1)
 
 %scatter(matchedPoints_1(:,1),matchedPoints_1(:,1)); 
 
+imshow(imfuse(I_0,I_1,'falsecolor','Scaling','joint','ColorChannels',[1 1 2])); 
+hold on; 
 
 for i = 1:matchedPoints_0.Count
     x_from = matchedPoints_0.Location(i,1); 
