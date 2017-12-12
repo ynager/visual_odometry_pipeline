@@ -47,7 +47,7 @@ globalData.landmarks = [];              % 3D pointcloud (Nx3 matrix)
 %put ground truth info into a realVSet
 for i = 1:length(ground_truth)
     globalData.actualVSet = addView(globalData.actualVSet, i, ...
-       'Orientation', eye(3), 'Location', [ground_truth(i,1), ground_truth(i,2), 0]);
+       'Orientation', eye(3), 'Location', [ground_truth(i,1), 0, ground_truth(i,2)]);
 end
 
 
@@ -61,6 +61,9 @@ globalData.vSet = viewSet;  %erase if anything in there already
 
 % run bootstrap: Estimating the pose of the second view relative to the first view
 [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
+
+% apply scale factor to match to ground truth
+globalData = applyScaleFactor(globalData); 
 
 %% Setup Camera/Trajectory plot
 [trajActualPlot, trajEstimatedPlot, camPlot] = setupCamTrajectoryPlot(globalData); 
