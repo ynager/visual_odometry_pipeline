@@ -27,3 +27,5 @@ set(gca,'Ylim',[limsy(1)-5, limsy(2)+5]);
 
 limsz=get(gca,'ZLim');
 set(gca,'Zlim',[limsz(1)-5, limsz(2)+5]); 
+
+view(0, 0); 
