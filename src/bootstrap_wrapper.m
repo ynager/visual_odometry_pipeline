@@ -44,13 +44,9 @@ function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globa
 % get parameters
 run('parameters.m');
 
-% load images
-I_0 = loadImage(ds,bootstrap.images(1));
-I_1 = loadImage(ds,bootstrap.images(2));
-
-% undistort images if nescessary
-I_0 = undistortImage(I_0, cameraParams);
-I_1 = undistortImage(I_1, cameraParams);
+% load undistorted images
+I_0 = loadImage(ds,bootstrap.images(1), cameraParams);
+I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
 
 % Detect feature points
 switch bootstrap.det_method
@@ -60,6 +56,14 @@ switch bootstrap.det_method
         
         points_1 = detectHarrisFeatures(I_1, 'MinQuality', harris.min_quality); %detect
         points_1 = selectUniform(points_1, harris.num_points, size(I_1));       %select uniformly
+        
+    case 'fast'
+        points_0 = detectFASTFeatures(I_0, 'MinQuality', fast.min_quality);
+        points_0 = selectUniform(points_0, fast.num_points, size(I_0));
+        
+        points_1 = detectFASTFeatures(I_1, 'MinQuality', fast.min_quality);
+        points_1 = selectUniform(points_1, fast.num_points, size(I_1));
+        
     otherwise
         disp('given bootstrap.det_method not yet implemented')
 end
@@ -69,12 +73,15 @@ switch bootstrap.desc_method
     case 'HOG'
         [descriptors_0, points_0] = extractHOGFeatures(I_0, points_0);
         [descriptors_1, points_1] = extractHOGFeatures(I_1, points_1);
+    case 'auto'
+        [descriptors_0, points_0] = extractFeatures(I_0, points_0);
+        [descriptors_1, points_1] = extractFeatures(I_1, points_1);
     otherwise
         disp('given bootstrap.desc_method not yet implemented')
 end
 
 % Match features between first and second image.
-indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true);
+indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true, 'MaxRatio', match.max_ration ,'MatchThreshold', match.match_threshold);
 
 % Add to vSet
 viewId = 1; 
@@ -83,14 +90,27 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Points', points_0, 'Orientat
 % estimate pose 
 matchedPoints_0 = points_0(indexPairs(:,1));
 matchedPoints_1 = points_1(indexPairs(:,2));
+fprintf('\nTotal matches found: %d\n', length(matchedPoints_0));  
 
 % estimate Fundamental Matrix
-% this function uses RANSAC and the 8-point algorithm
-[F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
+
+for i = 1:100
+    % this function uses RANSAC and the 8-point algorithm
+    [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
                  'Method','RANSAC', 'DistanceThreshold', ransac.distanceThreshold, ... 
                  'Confidence',ransac.confidence, 'NumTrials', ransac.numTrials);
              
+    % Make sure we get enough inliers
+    ratio = sum(inlierIdx) / numel(inlierIdx); 
+    if(ratio > 0.4)
+        fprintf('Fraction of inliers: %.2f',ratio);
+        break;
+    end
+end
+             
 E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix; 
+
+%[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0, matchedPoints_1, cameraParams); 
 
 % get only matched pairs that are inliers
 indexPairs = indexPairs(inlierIdx, :);
@@ -101,16 +121,17 @@ inlierPoints_1 = matchedPoints_1(inlierIdx, :);
 
 
 %Plot bootstrap matches
-plotMatches(matchedPoints_0, matchedPoints_1, I_0, I_1);  
+plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
 
     
 % Compute the camera pose from the fundamental matrix.
 [orient, loc, validPointFraction] = ...
         relativeCameraPose(E, cameraParams, inlierPoints_0, inlierPoints_1);
+fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
     
- if(validPointFraction < 0.9) 
-     fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
- end
+if(validPointFraction < 0.9) 
+    fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
+end
 
 
 % Add the current view to the view set.
@@ -135,6 +156,12 @@ M2 = cameraParams.IntrinsicMatrix * [R, T];
 
 % triangulate
 xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
+
+% [R1, t1] = cameraPoseToExtrinsics(eye(3), [0,0,0]);
+% [R2, t2] = cameraPoseToExtrinsics(orient, loc);
+% camMatrix1 = cameraMatrix(cameraParams, R1, t1);
+% camMatrix2 = cameraMatrix(cameraParams, R2, t2);
+% xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, camMatrix1, camMatrix2);
 
 %% Generate initial state
 % Get unmatched candidate keypoints in second frame wich are all
