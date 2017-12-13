@@ -1,7 +1,7 @@
 function [currState, currPose, vSet] = processFrame_wrapper(I_curr, I_prev, ...
                                                 prevState, KLT_keypointsTracker, ...
-                                                KLT_candidateKeypointsTracker, cameraParams, ...
-                                                globalData)
+                                                KLT_candidateKeypointsTracker, ...
+                                                cameraParams, globalData)
 %PROCESSFRAME_WRAPPER After bootstrap: Estimating remaining camera trajectory
 %1. Associate keypoints in the current frame to previously triangulated landmarks.
 %2. Based on this, estimate the current camera pose.
@@ -11,8 +11,6 @@ function [currState, currPose, vSet] = processFrame_wrapper(I_curr, I_prev, ...
 %   input:
 %
 %       camearParams: Object for storing camera parameters
-%
-%       vSet: an instance of viewSet
 %
 %       I_curr/prev: image of previous and current step (for descriptors)
 %
@@ -70,24 +68,38 @@ run('parameters.m');
 
 % Detect feature points
 % TODO: this might not be needed!
-switch processFrame.det_method
-    case 'harris'
-        points_curr = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality); %detect
-    otherwise
-        disp('given processFrame.det_method not yet implemented')
-end
+% switch processFrame.det_method
+%     case 'harris'
+%         points_curr = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality); %detect
+%     otherwise
+%         disp('given processFrame.det_method not yet implemented')
+% end
 
 % track keypoints over frame
 [tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr); 
 % track candidate keypoints over frame
 [tracked_ckp,ckp_validity] = step(KLT_candidateKeypointsTracker,I_curr);
 
-% TODO: make sure tracked_kp and tracked_ckp are not redundant
+% make sure tracked_kp and tracked_ckp are not redundant
+% TODO: check 1. what values if ckp_validity is false?
+% TODO: check 2. if ismember can handle bad values from point 1.
+ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows');
 
-% TODO: run RANSAC to find inliers / run P3P to find new pose
+% run RANSAC to find inliers / run P3P to find new pose
 % estimateWorldCameraPose -> is p3p algo of vision toolbox
+landmarks_for_p3p = prevState.landmarks(kp_validity,:);
+kp_for_p3p = tracked_kp(kp_validity,:);
+% TODO: check if estimateWorldCameraPose is allowed? -> does not use ransac
+% TODO: maybe use here code from exercises (use best p3p guess)
+% TODO: if this fct works here, add maybe parameters
+[orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams);
 
 % TODO: add candidates to state
+currState.keypoints = kp_for_p3p(inlierIdx,:);
+currState.landmarks = landmarks_for_p3p(inlierIdx,:);
+
+
+
 
 % TODO: check nbr of matched keypoints -> if e.g. 20% lost -> do traingulation of
 % new landmarks based on candiate keypoints

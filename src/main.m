@@ -68,10 +68,8 @@ globalData = applyScaleFactor(globalData);
 %% Setup Camera/Trajectory plot
 [trajActualPlot, trajEstimatedPlot, camPlot] = setupCamTrajectoryPlot(globalData); 
 
-
 % update Camera/Trajectory plot
 updateCamTrajectoryPlot(viewId, globalData, trajActualPlot, trajEstimatedPlot, camPlot);
-
 
 %% Continuous operation
 
@@ -91,6 +89,8 @@ KLT_candidateKeypointsTracker = vision.PointTracker('NumPyramidLevels', klt.NumP
                                 'BlockSize', klt.BlockSize, ...
                                 'MaxIterations', klt.MaxIterations);                            
 
+% initialize Tracker
+I_curr = loadImage(ds, bootstrap.images(end), cameraParams);
 initialize(KLT_keypointsTracker, currState.keypoints, I_curr);
 initialize(KLT_candidateKeypointsTracker, currState.candidate_kp, I_curr);
                             
@@ -101,7 +101,7 @@ for i = range
     % update to current frame
     prevState = currState;
     I_prev = I_curr;
-    I_curr = loadImage(ds,i);
+    I_curr = loadImage(ds,i, cameraParameters);
     
     % get current state (containing all state info) and current pose
     [currState, currPose] = processFrame_wrapper(I_curr, I_prev, prevState, ...
