@@ -6,17 +6,25 @@ function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globa
 %
 %   input:
 %       camearParams: Object for storing camera parameters
+%           -> (nbr_pts_in_ptcloud x 3) Matrix: [x y z;...]
 %       globalData: Object containing actual and estimated viewSets and
 %       xyzPoints
 %
 %   output:
 %       globalData: updated globalData
 %       currState: struct containing first state of camera
-%           currState.keypoints: denoted as P in pdf
-%           currState.landmarks: denoted as X in pdf
-%           currState.candidate_kp: candidate keypoint, denoted as C in pdf
-%           currState.first_obs: first observation of track of keypoint, denoted as F in pdf
+%           currState.keypoints:
+%               denoted as P in pdf -> (nbr_kp x 2) Matrix: [u_hor v_vert;...]
+%           currState.landmarks:
+%               denoted as X in pdf -> (nbr_lm x 3) Matrix: [x y z;...]
+%           currState.candidate_kp:
+%               candidate keypoint, denoted as C in pdf
+%               -> (nbr_ckp x 2) Matrix: [u_hor v_vert;...]
+%           currState.first_obs:
+%               first observation of track of keypoint, denoted as F in pdf
+%               -> (nbr_ckp x 2) Matrix: [u_hor v_vert;...]
 %           currState.pose_first_obs: pose of first observation above, denoted as T in pdf
+%               -> (nbr_ckp x 12) Matrix: [orientation(:)'loc(:)';...]
 
 % TODOs: 
 % -(maybe) use viewSet only for visualization. for Pose, landmarks storage
@@ -138,7 +146,7 @@ currState.keypoints = inlierPoints_1.Location;
 currState.landmarks = xyzPoints; 
 currState.candidate_kp = candidate_kp; 
 currState.first_obs = candidate_kp;
-currState.pose_first_obs = repmat([orient(:); loc(:)], [length(candidate_kp), 1]);
+currState.pose_first_obs = repmat([orient(:)', loc(:)'], [length(candidate_kp),1]);
 
 %% update landmarks and actualVSet in globalData
 globalData.landmarks = xyzPoints; 
