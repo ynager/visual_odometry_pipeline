@@ -1,4 +1,4 @@
-function [currState, currPose, vSet] = processFrame_wrapper(I_curr, I_prev, ...
+function [currState, currPose, globalData] = processFrame_wrapper(I_curr, I_prev, ...
                                                 prevState, KLT_keypointsTracker, ...
                                                 KLT_candidateKeypointsTracker, ...
                                                 cameraParams, globalData)
@@ -41,7 +41,7 @@ function [currState, currPose, vSet] = processFrame_wrapper(I_curr, I_prev, ...
 %           currState.pose_first_obs: pose of first observation above, denoted as T in pdf
 %               -> (nbr_ckp x 12) Matrix: [orientation(:)'loc(:)';...]
 %
-%       vSet: updated vSet of input
+%       globalData: updated from Input with only pointcloud!
 %
 
 % TODOs: 
@@ -66,15 +66,6 @@ function [currState, currPose, vSet] = processFrame_wrapper(I_curr, I_prev, ...
 % get parameters
 run('parameters.m');
 
-% Detect feature points
-% TODO: this might not be needed!
-% switch processFrame.det_method
-%     case 'harris'
-%         points_curr = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality); %detect
-%     otherwise
-%         disp('given processFrame.det_method not yet implemented')
-% end
-
 % track keypoints over frame
 [tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr); 
 % track candidate keypoints over frame
@@ -83,7 +74,8 @@ run('parameters.m');
 % make sure tracked_kp and tracked_ckp are not redundant
 % TODO: check 1. what values if ckp_validity is false?
 % TODO: check 2. if ismember can handle bad values from point 1.
-ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows');
+% TODO: is a isclose needed?
+ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
 
 % run RANSAC to find inliers / run P3P to find new pose
 % estimateWorldCameraPose -> is p3p algo of vision toolbox
@@ -92,18 +84,42 @@ kp_for_p3p = tracked_kp(kp_validity,:);
 % TODO: check if estimateWorldCameraPose is allowed? -> does not use ransac
 % TODO: maybe use here code from exercises (use best p3p guess)
 % TODO: if this fct works here, add maybe parameters
-[orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams);
+% [orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams,'MaxReprojectionError',10,'Confidence',90);
+[ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
+
 
 % TODO: add candidates to state
 currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
+% for being ckp member, ckp_validity needs to be 1 but ckp_redundant != 1
+validity = ckp_validity + ckp_redundant;
+ckp_validity(validity==2)=0; % where ==2, needs to be set a 0
+currState.candidate_kp = tracked_ckp(ckp_validity,:); %add candidates from last frames
+currState.first_obs = prevState.first_obs(ckp_validity,:);
+
+% detect new candidates 
+switch processFrame.det_method
+    case 'harris'
+        new_kp = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality);
+        if harris.selectUniform
+            new_kp = selectUniform(new_kp, harris.num_points, size(I_curr));       %select uniformly
+        end
+    otherwise
+        disp('given processFrame.det_method not yet implemented')
+end
+
+% check for redundancy and add new candidates to state
+!!!!!!!!!!!############
+new_kp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
 
 
 
 % TODO: check nbr of matched keypoints -> if e.g. 20% lost -> do traingulation of
 % new landmarks based on candiate keypoints
 % (in triangulation: check alpha value threshold)
+
+% add pointcloud to globaldata
 
 
 currState = struct([]); 

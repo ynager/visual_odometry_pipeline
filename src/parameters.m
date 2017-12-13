@@ -26,7 +26,7 @@ match.max_ration = 0.6;    %(0,1)
 match.match_threshold = 10; %(0,100)
 
 % continuous operation
-%processFrame.det_method = bootstrap.det_method;
+processFrame.det_method = bootstrap.det_method;
 %processFrame.desc_method = bootstrap.desc_method;
 
     % KLT point Tracker
@@ -35,3 +35,10 @@ match.match_threshold = 10; %(0,100)
     klt.MaxBidirectionalError = 2; % if inf, is not calculated
     klt.BlockSize = [31 31];
     klt.MaxIterations = 30;
+    
+    p3p_ransac.num_iteration = 1000;
+    p3p_ransac.pixel_tolerance = 2;
+    p3p_ransac.min_inlier_fraction = 0.9;
+    
+    % harris
+    harris.selectUniform = true;

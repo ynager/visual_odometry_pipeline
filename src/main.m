@@ -104,12 +104,12 @@ for i = range
     I_curr = loadImage(ds,i, cameraParameters);
     
     % get current state (containing all state info) and current pose
-    [currState, currPose] = processFrame_wrapper(I_curr, I_prev, prevState, ...
+    [currState, currPose, globalData] = processFrame_wrapper(I_curr, I_prev, prevState, ...
                                                    KLT_keypointsTracker, ...
                                                    KLT_candidateKeypointsTracker, ...
                                                    cameraParams, globalData);
     
-    % TODO: update vSet with new pose
+    % TODO: update globaldata.viewSet with pose and i
     
 end
     
