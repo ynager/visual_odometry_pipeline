@@ -45,12 +45,12 @@ function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globa
 run('parameters.m');
 
 % load images
-I_0 = loadImage(ds,bootstrap.images(1));
-I_1 = loadImage(ds,bootstrap.images(2));
+I_0 = loadImage(ds,bootstrap.images(1), cameraParams);
+I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
 
 % undistort images if nescessary
-I_0 = undistortImage(I_0, cameraParams);
-I_1 = undistortImage(I_1, cameraParams);
+%I_0 = undistortImage(I_0, cameraParams);
+%I_1 = undistortImage(I_1, cameraParams);
 
 % Detect feature points
 switch bootstrap.det_method
