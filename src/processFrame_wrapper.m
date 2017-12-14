@@ -87,6 +87,8 @@ kp_for_p3p = tracked_kp(kp_validity,:);
 % [orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams,'MaxReprojectionError',10,'Confidence',90);
 [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
 
+% TODO: add orient and loc onto prev state and put into curr state
+% TODO: check if orient and loc are empty, in that case skip the step?
 
 % TODO: add candidates to state
 currState.keypoints = kp_for_p3p(inlierIdx,:);
@@ -97,6 +99,12 @@ validity = ckp_validity + ckp_redundant;
 ckp_validity(validity==2)=0; % where ==2, needs to be set a 0
 currState.candidate_kp = tracked_ckp(ckp_validity,:); %add candidates from last frames
 currState.first_obs = prevState.first_obs(ckp_validity,:);
+
+% TODO: check if inlierIdx are below thershold, if yes run triangulation
+% with candidate_kp
+% (in triangulation: check alpha value threshold)
+% after triang, append used candidates to curr states, append landmarks to
+% curr landmarks
 
 % detect new candidates 
 switch processFrame.det_method
@@ -111,15 +119,8 @@ end
 
 % check for redundancy and add new candidates to state
 !!!!!!!!!!!############
-new_kp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
+new_kp_redundant = ismember(...,'rows'); %check ckp in kp
 
-
-
-% TODO: check nbr of matched keypoints -> if e.g. 20% lost -> do traingulation of
-% new landmarks based on candiate keypoints
-% (in triangulation: check alpha value threshold)
-
-% add pointcloud to globaldata
 
 
 currState = struct([]); 
