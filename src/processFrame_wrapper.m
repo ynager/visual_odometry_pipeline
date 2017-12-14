@@ -89,6 +89,10 @@ kp_for_p3p = tracked_kp(kp_validity,:);
 [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
 fprintf('\nTotal matches found: %d\n', sum(inlierIdx));  
 fprintf('Fraction of inliers: %.2f',sum(inlierIdx)/length(inlierIdx));
+
+% TODO: check delta_loc, return if bad
+%#
+
 % prepare orient and loc for return
 % TODO: check if orient and loc are empty, in that case skip the step?
 currRT = [orient,loc];
@@ -131,6 +135,9 @@ currState.pose_first_obs = [currState.pose_first_obs;...
 % finally update KLT_keypointsTracker and KLT_candidateKeypointsTracker
 setPoints(KLT_keypointsTracker,currState.keypoints);
 setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);
+
+% printout
+fprintf('\nEnd of step. Numbers of keypoints: %d',length(currState.keypoints));
 
 end
 

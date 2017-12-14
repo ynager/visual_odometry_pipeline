@@ -11,8 +11,8 @@ bootstrap.desc_method = 'HOG';
 bootstrap.use_KLT = true; 
 
     % harris
-    harris.min_quality = 0.001;
-    harris.num_points = 10000; 
+    harris.min_quality = 0.001; % 0.001 init
+    harris.num_points = 5000; % 10000 init
     
     % fast
     fast.min_quality = 0.01;
@@ -39,11 +39,11 @@ processFrame.det_method = bootstrap.det_method;
     klt.MaxIterations = 30;
     
     p3p_ransac.num_iteration = 1000;
-    p3p_ransac.pixel_tolerance = 2;
-    p3p_ransac.min_inlier_fraction = 0.9;
+    p3p_ransac.pixel_tolerance = 2; % 2 init
+    p3p_ransac.min_inlier = 20;
     
     % harris
     harris.selectUniform = true;
     
     % triangulation
-    alpha_threshold = deg2rad(20);
+    alpha_threshold = deg2rad(10); % 20 init

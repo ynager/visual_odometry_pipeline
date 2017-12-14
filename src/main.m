@@ -1,6 +1,7 @@
 %% Setup & Load
 %load parameters
 clear all; 
+close all;
 run('parameters.m');
 
 %get ground truth, K, and last frame index from database
@@ -56,6 +57,7 @@ cameraParams = cameraParameters('IntrinsicMatrix', K);
 clear K;
 
 %% 	BOOTSTRAP
+close all;
 
 globalData.vSet = viewSet;  %erase if anything in there already
 
@@ -120,8 +122,19 @@ for i = range
     updateCamTrajectoryPlot(viewId, globalData,I_curr, plotHandles); 
     fprintf('\nnum landmarks: %d', length(globalData.landmarks)); 
     
-    pause(2);
+    pause(0.5);
 end
     
-                    
+%% Questions
+
+% keypoints at end of step: still containing the outlier keypoints in p3p?
+% i.e. only discard keypoints when failed to track?
+
+% should we implement a delta_loc max threshold? (or orientation
+% threshold?)
+
+%% TODO general
+
+% have a look at alpha
+% proper printouts -> what causes failure?
                

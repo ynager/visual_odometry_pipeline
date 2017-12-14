@@ -55,7 +55,7 @@ for i = 1:size(currState.pose_first_obs,1)
         success(i)=true;
     end
 end
-
+fprintf('\nTriangulation, created new landmarks: %d',sum(success));
 %delete used candidates
 currState.candidate_kp(success,:) = [];
 currState.first_obs(success,:) = [];

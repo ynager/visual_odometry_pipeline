@@ -8,7 +8,7 @@ set(gcf,'units','points','position',[300,300,800,400],'color','w');
 
 %Setup PointCloud Axes
 %************************************************************************
-ax1 = axes('Position',[.05 .15 .4 .8]);
+ax1 = axes('Position',[.05 .10 .4 .8]);
 grid on
 xlabel('X (m)');
 ylabel('Y (m)');

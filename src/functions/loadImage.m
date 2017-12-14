@@ -2,7 +2,7 @@ function undist_image = loadImage(ds, i, cameraParams)
     % load UNDISTORTED image
     
     % get img
-    fprintf('Loading frame %d\n', i);
+    fprintf('\nLoading frame %d\n', i);
     if ds == 0
         image = imread(['../datasets/kitti/00/image_0/' sprintf('%06d.png',i)]);
     elseif ds == 1
