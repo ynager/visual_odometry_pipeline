@@ -4,17 +4,19 @@
 ds = 2;
 
 % bootstrap images
-bootstrap.images = [15,18]; 
+bootstrap.images = [1,4]; 
 bootstrap.det_method = 'harris';
 bootstrap.desc_method = 'HOG';
 
+bootstrap.use_KLT = true; 
+
     % harris
-    harris.min_quality = 0.05;
+    harris.min_quality = 0.001;
     harris.num_points = 10000; 
     
     % fast
     fast.min_quality = 0.01;
-    fast.num_points = 1000; 
+    fast.num_points = 20000; 
     
 
 ransac.numTrials = 10000;

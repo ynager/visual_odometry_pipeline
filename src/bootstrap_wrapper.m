@@ -68,32 +68,54 @@ switch bootstrap.det_method
         disp('given bootstrap.det_method not yet implemented')
 end
 
-% Extract features at selected points
-switch bootstrap.desc_method
-    case 'HOG'
-        [descriptors_0, points_0] = extractHOGFeatures(I_0, points_0);
-        [descriptors_1, points_1] = extractHOGFeatures(I_1, points_1);
-    case 'auto'
-        [descriptors_0, points_0] = extractFeatures(I_0, points_0);
-        [descriptors_1, points_1] = extractFeatures(I_1, points_1);
-    otherwise
-        disp('given bootstrap.desc_method not yet implemented')
-end
-
-% Match features between first and second image.
-indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true, 'MaxRatio', match.max_ration ,'MatchThreshold', match.match_threshold);
-
 % Add to vSet
 viewId = 1; 
 globalData.vSet = addView(globalData.vSet, viewId, 'Points', points_0, 'Orientation', eye(3), 'Location', [0 0 0]);
- 
-% estimate pose 
-matchedPoints_0 = points_0(indexPairs(:,1));
-matchedPoints_1 = points_1(indexPairs(:,2));
-fprintf('\nTotal matches found: %d\n', length(matchedPoints_0));  
 
-% estimate Fundamental Matrix
+% USE KLT
+if(bootstrap.use_KLT)  
+    KLT = vision.PointTracker('NumPyramidLevels', klt.NumPyramidLevels, ...
+                              'MaxBidirectionalError', klt.MaxBidirectionalError, ...
+                              'BlockSize', klt.BlockSize, ...
+                              'MaxIterations', klt.MaxIterations);
+    
+    initialize(KLT, points_0.Location, I_0);
+    [points_klt,kp_validity] = step(KLT,I_1);
 
+    matchedPoints_0 = points_0(kp_validity);
+    matchedPoints_1 = points_klt(kp_validity,:);
+    
+    %convert to cornerPoint object to match template 
+    matchedPoints_1 = cornerPoints(matchedPoints_1); 
+    indexPairs = ones(matchedPoints_1.Count, 2); 
+
+
+% USE FEATURE MATCHING
+else  
+    
+    % Extract features at selected points
+    switch bootstrap.desc_method
+        case 'HOG'
+            [descriptors_0, points_0] = extractHOGFeatures(I_0, points_0);
+            [descriptors_1, points_1] = extractHOGFeatures(I_1, points_1);
+        case 'auto'
+            [descriptors_0, points_0] = extractFeatures(I_0, points_0);
+            [descriptors_1, points_1] = extractFeatures(I_1, points_1);
+        otherwise
+            disp('given bootstrap.desc_method not yet implemented')
+    end
+
+    % Match features between first and second image.
+    indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true, 'MaxRatio', match.max_ration ,'MatchThreshold', match.match_threshold);
+
+    % estimate pose 
+    matchedPoints_0 = points_0(indexPairs(:,1));
+    matchedPoints_1 = points_1(indexPairs(:,2));
+end
+
+fprintf('\nMatches found: %d\n', length(matchedPoints_0));
+
+% ESTIMATE FUNDAMENTAL MATRIX
 for i = 1:100
     % this function uses RANSAC and the 8-point algorithm
     [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
@@ -107,9 +129,11 @@ for i = 1:100
         break;
     end
 end
-             
+
+% get essential matrix
 E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix; 
 
+% we arent allowed to use directly this function: 
 %[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0, matchedPoints_1, cameraParams); 
 
 % get only matched pairs that are inliers
@@ -119,12 +143,8 @@ indexPairs = indexPairs(inlierIdx, :);
 inlierPoints_0 = matchedPoints_0(inlierIdx, :);
 inlierPoints_1 = matchedPoints_1(inlierIdx, :);
 
-
-%Plot bootstrap matches
-plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
-
-    
-% Compute the camera pose from the fundamental matrix.
+% Compute the camera pose from the fundamental matrix and disambiguate
+% invalid configurations using inlierPoints
 [orient, loc, validPointFraction] = ...
         relativeCameraPose(E, cameraParams, inlierPoints_0, inlierPoints_1);
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
@@ -132,7 +152,6 @@ fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 if(validPointFraction < 0.9) 
     fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
 end
-
 
 % Add the current view to the view set.
 viewId = 2;
@@ -143,37 +162,27 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Locat
 
 %% Triangulate to get 3D points
 
-% Get 2 possible rotation matrices and a translation vector
-[Rots, u3] = decomposeEssentialMatrix(E);
-
-% Disambiguate invalid configurations (makes sure majority of points lie in
-% front of camera) 
-[R,T] = disambiguateRelativePose(Rots,u3,inlierPoints_0, inlierPoints_1,cameraParams);
-
 % calculate camera matrices
 M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
-M2 = cameraParams.IntrinsicMatrix * [R, T];
+M2 = cameraParams.IntrinsicMatrix * [-orient, loc'];
 
 % triangulate
 xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
 
-% [R1, t1] = cameraPoseToExtrinsics(eye(3), [0,0,0]);
-% [R2, t2] = cameraPoseToExtrinsics(orient, loc);
-% camMatrix1 = cameraMatrix(cameraParams, R1, t1);
-% camMatrix2 = cameraMatrix(cameraParams, R2, t2);
-% xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, camMatrix1, camMatrix2);
-
 %% Generate initial state
 % Get unmatched candidate keypoints in second frame wich are all
 % elements in points_1 not contained in indexPairs(:,2)
+
 candidate_kp_ind = setdiff(1:length(points_1.Location),indexPairs(:,2));
 candidate_kp = points_1.Location(candidate_kp_ind,:);
 
 currState.keypoints = inlierPoints_1.Location; 
+
 currState.landmarks = xyzPoints; 
 currState.candidate_kp = candidate_kp; 
 currState.first_obs = candidate_kp;
 currState.pose_first_obs = repmat([orient(:)', loc(:)'], [length(candidate_kp),1]);
+
 
 %% update landmarks and actualVSet in globalData
 globalData.landmarks = xyzPoints; 
@@ -186,6 +195,12 @@ for i = 2:bootstrap.images(2)-1
     end
     
 end
+
+%% Plotting
+
+
+%Plot bootstrap matches
+plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
 
 end
 
