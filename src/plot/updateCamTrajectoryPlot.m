@@ -1,31 +1,61 @@
-function updateCamTrajectoryPlot(viewId, globalData, ...
-                                        trajActualPlot, trajEstimatedPlot, ...
-                                        camPlot)
+function updateCamTrajectoryPlot(viewId, globalData,I, plotHandles)
 
 % Move the estimated camera in the plot
-camPlot.Location = globalData.vSet.Views.Location{viewId};
-camPlot.Orientation = globalData.vSet.Views.Orientation{viewId};
+h = plotHandles.axes1.Children(4);
+M = cat(1,globalData.vSet.Views.Orientation{viewId}*0.5, zeros(1,3)); 
+M = cat(2,M,[globalData.vSet.Views.Location{viewId}, 1]'); 
+h.Matrix = M; 
+%h.camPlot.Orientation = globalData.vSet.Views.Orientation{viewId};
 
 % Plot the estimated trajectory
+h = plotHandles.axes1.Children(3);
 locations = cat(1, globalData.vSet.Views.Location{:});
-set(trajEstimatedPlot, 'XData', locations(:,1), 'YData', ...
+set(h, 'XData', locations(:,1), 'YData', ...
     locations(:,2), 'ZData', locations(:,3));
 
 % Plot the ground truth trajectory from actualVSet
+h = plotHandles.axes1.Children(2);
 locationsActual = cat(1, globalData.actualVSet.Views.Location{1:viewId});
-set(trajActualPlot, 'XData', locationsActual(:,1), 'YData', ...
+set(h, 'XData', locationsActual(:,1), 'YData', ...
     locationsActual(:,2), 'ZData', locationsActual(:,3));
 
-pcshow(globalData.landmarks,'black', 'MarkerSize', 10); 
+% Updata point cloud
+h = plotHandles.axes1.Children(1);
+set(h, 'XData', globalData.landmarks(:,1), 'YData', ...
+    globalData.landmarks(:,2), 'ZData', globalData.landmarks(:,3));
+ 
 
 % set axis limits 5 meters larger than data
-limsx=get(gca,'XLim');
-set(gca,'Xlim',[limsx(1)-5, limsx(2)+5]); 
+limsx=get(plotHandles.axes1,'XLim');
+set(plotHandles.axes1,'Xlim',[limsx(1)-1, limsx(2)+1]); 
 
-limsy=get(gca,'YLim');
-set(gca,'Ylim',[limsy(1)-5, limsy(2)+5]); 
+limsy=get(plotHandles.axes1,'YLim');
+set(plotHandles.axes1,'Ylim',[limsy(1)-1, limsy(2)+1]); 
 
-limsz=get(gca,'ZLim');
-set(gca,'Zlim',[limsz(1)-5, limsz(2)+5]); 
+limsz=get(plotHandles.axes1,'ZLim');
+set(plotHandles.axes1,'Zlim',[limsz(1)-1, limsz(2)+1]); 
 
-view(0, 0); 
+axes(plotHandles.axes2);   
+imshow(I); 
+num_inliers = length(globalData.vSet.Views.Points{viewId}); 
+title(['Number of inliers: ',num2str(num_inliers)]);
+hold on; 
+x = globalData.vSet.Views.Points{viewId}(:,1);
+y = globalData.vSet.Views.Points{viewId}(:,2); 
+
+%draw displacement vectors
+for i = 1:num_inliers
+    x_from = globalData.vSet.Views.Points{viewId-1}(i,1); 
+    x_to = globalData.vSet.Views.Points{viewId}(i,1);
+    y_from = globalData.vSet.Views.Points{viewId-1}(i,2);
+    y_to = globalData.vSet.Views.Points{viewId}(i,2);
+    
+    plot([x_from; x_to], [y_from; y_to], 'r-', 'Linewidth', 0.2);
+    hold on; 
+end
+
+%draw points
+scatter(x,y,5,'green','filled','Marker','o'); 
+
+
+
