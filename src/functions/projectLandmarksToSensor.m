@@ -1,5 +1,6 @@
-function [ projected_points ] = projectPoints( landmark_C_frame, K )
-%PROJECTPOINTS takes 3D landmarks as 3xM Matrix: [x;y;z ...] and projects
+function [ projected_points ] = projectLandmarksToSensor( landmark_C_frame, K )
+%Attention! Differenct convention in how to fill matrixes!!
+%projectLandmarksToSensor takes 3D landmarks as 3xM Matrix: [x;y;z ...] and projects
 %them with K
 %returns projected_points as 2xM Matrix: [x;y ...]
 

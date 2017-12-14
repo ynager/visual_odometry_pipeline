@@ -42,3 +42,6 @@ processFrame.det_method = bootstrap.det_method;
     
     % harris
     harris.selectUniform = true;
+    
+    % triangulation
+    triangulation.alpha = deg2rad(45);

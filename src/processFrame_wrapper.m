@@ -1,4 +1,4 @@
-function [currState, currPose, globalData] = processFrame_wrapper(I_curr, I_prev, ...
+function [currState, currRT, globalData] = processFrame_wrapper(I_curr, I_prev, ...
                                                 prevState, KLT_keypointsTracker, ...
                                                 KLT_candidateKeypointsTracker, ...
                                                 cameraParams, globalData)
@@ -43,6 +43,8 @@ function [currState, currPose, globalData] = processFrame_wrapper(I_curr, I_prev
 %
 %       globalData: updated from Input with only pointcloud!
 %
+%       currRT: current pose and location as [R,T] = [3x3  3x1]
+%
 
 % TODOs: 
 % -Use KLT tracking+RANSAC (of exercise 7, for KLT use vision.PointTracker)
@@ -82,29 +84,50 @@ ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
 landmarks_for_p3p = prevState.landmarks(kp_validity,:);
 kp_for_p3p = tracked_kp(kp_validity,:);
 % TODO: check if estimateWorldCameraPose is allowed? -> does not use ransac
-% TODO: maybe use here code from exercises (use best p3p guess)
 % TODO: if this fct works here, add maybe parameters
 % [orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams,'MaxReprojectionError',10,'Confidence',90);
 [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
 
-% TODO: add orient and loc onto prev state and put into curr state
+% prepare orient and loc for return
 % TODO: check if orient and loc are empty, in that case skip the step?
+currRT = [orient,loc];
 
 % TODO: add candidates to state
 currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
 % for being ckp member, ckp_validity needs to be 1 but ckp_redundant != 1
-validity = ckp_validity + ckp_redundant;
-ckp_validity(validity==2)=0; % where ==2, needs to be set a 0
+% TODO: use and
+wrong_validity = and(ckp_validity,ckp_redundant);
+ckp_validity(wrong_validity)=0;
 currState.candidate_kp = tracked_ckp(ckp_validity,:); %add candidates from last frames
 currState.first_obs = prevState.first_obs(ckp_validity,:);
+currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
 
 % TODO: check if inlierIdx are below thershold, if yes run triangulation
-% with candidate_kp
-% (in triangulation: check alpha value threshold)
-% after triang, append used candidates to curr states, append landmarks to
-% curr landmarks
+% with candidate_kp, dont forget to set lvl to new value
+% TODO: check if alpha of landmark is above threshold -> triangulate for
+% those
+[currState] = triangulateAlphaBased(currState);
+bearings_curr = getBearingVector( currState.candidate_kp, cameraParams.IntrinsicMatrix );
+bearings_curr_W = orient*bearings_curr'
+bearings_prev = getBearingVector( currState.first_obs, cameraParams.IntrinsicMatrix );
+for i = 1:size(currState.pose_first_obs,1)
+    bear = bearings_prev(i,:);
+    R = currState.pose_first_obs(i,:);
+    R = R(1:9);
+    R = reshape(R,3,3);
+    bearings_prev_W = R*bear'; %attention change of convention of axes here
+    %TODO: test if angle is always small or vectors potentialle can swap
+    alpha = atan2(norm(cross(bearings_prev_W,bearings_curr_W(:,i)),dot(bearings_prev_W,bearings_curr_W(:,i))));
+    if alpha > triangulaiton.alpha
+        %TODO: do triangulation, delete from state in candidate, add to
+        %state in keypoint and add landmark to pointcloud...and others?
+    end
+end
+% TODO: after triang, append used candidates to curr states, append landmarks to
+% curr landmarks, and delete used candidates from candidate list and first
+% obs list
 
 % detect new candidates 
 switch processFrame.det_method
@@ -117,7 +140,8 @@ switch processFrame.det_method
         disp('given processFrame.det_method not yet implemented')
 end
 
-% check for redundancy and add new candidates to state
+% check for redundancy and add new candidates to state and current pose to
+% first obs
 !!!!!!!!!!!############
 new_kp_redundant = ismember(...,'rows'); %check ckp in kp
 
@@ -130,7 +154,6 @@ currState.candidate_kp = [];
 currState.first_obs = [];
 currState.pose_first_obs = [];
 
-currPose=1;
 
 end
 
