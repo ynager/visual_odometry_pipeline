@@ -5,7 +5,6 @@ h = plotHandles.axes1.Children(4);
 M = cat(1,globalData.vSet.Views.Orientation{viewId}*0.5, zeros(1,3)); 
 M = cat(2,M,[globalData.vSet.Views.Location{viewId}, 1]'); 
 h.Matrix = M; 
-%h.camPlot.Orientation = globalData.vSet.Views.Orientation{viewId};
 
 % Plot the estimated trajectory
 h = plotHandles.axes1.Children(3);
@@ -44,15 +43,15 @@ x = globalData.vSet.Views.Points{viewId}(:,1);
 y = globalData.vSet.Views.Points{viewId}(:,2); 
 
 %draw displacement vectors
-for i = 1:num_inliers
-    x_from = globalData.vSet.Views.Points{viewId-1}(i,1); 
-    x_to = globalData.vSet.Views.Points{viewId}(i,1);
-    y_from = globalData.vSet.Views.Points{viewId-1}(i,2);
-    y_to = globalData.vSet.Views.Points{viewId}(i,2);
+%for i = 1:num_inliers
+%    x_from = globalData.vSet.Views.Points{viewId-1}(i,1); 
+%    x_to = globalData.vSet.Views.Points{viewId}(i,1);
+%    y_from = globalData.vSet.Views.Points{viewId-1}(i,2);
+%    y_to = globalData.vSet.Views.Points{viewId}(i,2);
     
-    plot([x_from; x_to], [y_from; y_to], 'r-', 'Linewidth', 0.2);
-    hold on; 
-end
+%    plot([x_from; x_to], [y_from; y_to], 'r-', 'Linewidth', 0.2);
+%    hold on; 
+%end
 
 %draw points
 scatter(x,y,5,'green','filled','Marker','o'); 

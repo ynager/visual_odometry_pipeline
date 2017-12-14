@@ -110,10 +110,17 @@ for i = range
                                                    KLT_candidateKeypointsTracker, ...
                                                    cameraParams, globalData);
     
+    % Apply scale factor
+    globalData = applyScaleFactor(globalData); 
+                                               
     % TODO: update globaldata.viewSet with pose and i
-    globalData.vSet = addView(globalData.vSet, i, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4));
+    viewId = i - bootstrap.images(2) + 2; 
+    globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4)', 'Points', currState.keypoints);
 
+    updateCamTrajectoryPlot(viewId, globalData,I_curr, plotHandles); 
+    fprintf('\nnum landmarks: %d', length(globalData.landmarks)); 
     
+    pause(2);
 end
     
                     
