@@ -68,10 +68,6 @@ switch bootstrap.det_method
         disp('given bootstrap.det_method not yet implemented')
 end
 
-% Add to vSet
-viewId = 1; 
-globalData.vSet = addView(globalData.vSet, viewId, 'Points', points_0, 'Orientation', eye(3), 'Location', [0 0 0]);
-
 % USE KLT
 if(bootstrap.use_KLT)  
     KLT = vision.PointTracker('NumPyramidLevels', klt.NumPyramidLevels, ...
@@ -153,13 +149,6 @@ if(validPointFraction < 0.9)
     fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
 end
 
-% Add the current view to the view set.
-viewId = 2;
-globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc);
-
-% Store the point matches between the previous and the current views.
-% globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
-
 %% Triangulate to get 3D points
 
 % get rotation matrix and translation vector from pose orientation and location
@@ -187,6 +176,16 @@ currState.candidate_kp = candidate_kp;
 currState.first_obs = candidate_kp;
 currState.pose_first_obs = repmat([orient(:)', loc(:)'], [length(candidate_kp),1]);
 
+
+%% populate viewsets
+viewId = 1; 
+globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', eye(3), 'Location', [0 0 0], 'Points', inlierPoints_0);
+
+viewId = 2;
+globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc, 'Points', inlierPoints_1);
+
+% Store the point matches between the previous and the current views.
+% globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
 
 %% update landmarks and actualVSet in globalData
 globalData.landmarks = xyzPoints; 

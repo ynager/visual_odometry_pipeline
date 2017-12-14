@@ -4,7 +4,7 @@
 ds = 2;
 
 % bootstrap images
-bootstrap.images = [1,4]; 
+bootstrap.images = [1,5]; 
 bootstrap.det_method = 'harris';
 bootstrap.desc_method = 'HOG';
 
