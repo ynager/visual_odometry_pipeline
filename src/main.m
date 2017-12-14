@@ -66,10 +66,11 @@ globalData.vSet = viewSet;  %erase if anything in there already
 globalData = applyScaleFactor(globalData); 
 
 %% Setup Camera/Trajectory plot
-[trajActualPlot, trajEstimatedPlot, camPlot] = setupCamTrajectoryPlot(globalData); 
+plotHandles = setupCamTrajectoryPlot(globalData); 
 
 % update Camera/Trajectory plot
-updateCamTrajectoryPlot(viewId, globalData, trajActualPlot, trajEstimatedPlot, camPlot);
+I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
+updateCamTrajectoryPlot(viewId, globalData,I_1, plotHandles); 
 
 %% Continuous operation
 
