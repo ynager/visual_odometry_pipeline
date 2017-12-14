@@ -1,4 +1,4 @@
-function [currState, currRT, globalData] = processFrame_wrapper(I_curr, I_prev, ...
+function [currState, currRT, globalData] = processFrame_wrapper(I_curr, ...
                                                 prevState, KLT_keypointsTracker, ...
                                                 KLT_candidateKeypointsTracker, ...
                                                 cameraParams, globalData)
@@ -68,6 +68,9 @@ function [currState, currRT, globalData] = processFrame_wrapper(I_curr, I_prev, 
 % get parameters
 run('parameters.m');
 
+%TODO: INITIALIZE TRACKER HERE or somewhere else? use setPoints...
+
+
 % track keypoints over frame
 [tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr); 
 % track candidate keypoints over frame
@@ -83,51 +86,28 @@ ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
 % estimateWorldCameraPose -> is p3p algo of vision toolbox
 landmarks_for_p3p = prevState.landmarks(kp_validity,:);
 kp_for_p3p = tracked_kp(kp_validity,:);
-% TODO: check if estimateWorldCameraPose is allowed? -> does not use ransac
-% TODO: if this fct works here, add maybe parameters
-% [orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams,'MaxReprojectionError',10,'Confidence',90);
 [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
-
+fprintf('\nTotal matches found: %d\n', sum(inlierIdx));  
+fprintf('Fraction of inliers: %.2f',sum(inlierIdx)/length(inlierIdx));
 % prepare orient and loc for return
 % TODO: check if orient and loc are empty, in that case skip the step?
 currRT = [orient,loc];
-
-% TODO: add candidates to state
+fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
+% TODO: add used keypoints and landmarks to state, discard all others
 currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
 % for being ckp member, ckp_validity needs to be 1 but ckp_redundant != 1
-% TODO: use and
 wrong_validity = and(ckp_validity,ckp_redundant);
 ckp_validity(wrong_validity)=0;
 currState.candidate_kp = tracked_ckp(ckp_validity,:); %add candidates from last frames
 currState.first_obs = prevState.first_obs(ckp_validity,:);
 currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
 
-% TODO: check if inlierIdx are below thershold, if yes run triangulation
+% TODO: maybe add check if nbr kp are below thershold, if yes run triangulation
 % with candidate_kp, dont forget to set lvl to new value
-% TODO: check if alpha of landmark is above threshold -> triangulate for
-% those
-[currState] = triangulateAlphaBased(currState);
-bearings_curr = getBearingVector( currState.candidate_kp, cameraParams.IntrinsicMatrix );
-bearings_curr_W = orient*bearings_curr'
-bearings_prev = getBearingVector( currState.first_obs, cameraParams.IntrinsicMatrix );
-for i = 1:size(currState.pose_first_obs,1)
-    bear = bearings_prev(i,:);
-    R = currState.pose_first_obs(i,:);
-    R = R(1:9);
-    R = reshape(R,3,3);
-    bearings_prev_W = R*bear'; %attention change of convention of axes here
-    %TODO: test if angle is always small or vectors potentialle can swap
-    alpha = atan2(norm(cross(bearings_prev_W,bearings_curr_W(:,i)),dot(bearings_prev_W,bearings_curr_W(:,i))));
-    if alpha > triangulaiton.alpha
-        %TODO: do triangulation, delete from state in candidate, add to
-        %state in keypoint and add landmark to pointcloud...and others?
-    end
-end
-% TODO: after triang, append used candidates to curr states, append landmarks to
-% curr landmarks, and delete used candidates from candidate list and first
-% obs list
+% check if alpha of landmarks is above threshold -> triangulate for those
+[currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
 
 % detect new candidates 
 switch processFrame.det_method
@@ -137,23 +117,20 @@ switch processFrame.det_method
             new_kp = selectUniform(new_kp, harris.num_points, size(I_curr));       %select uniformly
         end
     otherwise
-        disp('given processFrame.det_method not yet implemented')
+        disp('given processFrame.det_method not yet implemented in processFrame')
 end
 
 % check for redundancy and add new candidates to state and current pose to
 % first obs
-!!!!!!!!!!!############
-new_kp_redundant = ismember(...,'rows'); %check ckp in kp
+new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));
+currState.candidate_kp = [currState.candidate_kp; new_kp.Location(new_kp_valid,:)];
+currState.first_obs = [currState.first_obs; new_kp.Location(new_kp_valid,:)];
+currState.pose_first_obs = [currState.pose_first_obs;...
+    repmat([orient(:)', loc(:)'], [length(new_kp.Location(new_kp_valid,:)),1])];
 
-
-
-currState = struct([]); 
-currState.keypoints = [];
-currState.landmarks = [];
-currState.candidate_kp = [];
-currState.first_obs = [];
-currState.pose_first_obs = [];
-
+% finally update KLT_keypointsTracker and KLT_candidateKeypointsTracker
+setPoints(KLT_keypointsTracker,currState.keypoints);
+setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);
 
 end
 

@@ -101,16 +101,17 @@ for i = range
     
     % update to current frame
     prevState = currState;
-    I_prev = I_curr;
     I_curr = loadImage(ds,i, cameraParameters);
     
     % get current state (containing all state info) and current pose
-    [currState, currRT, globalData] = processFrame_wrapper(I_curr, I_prev, prevState, ...
+    [currState, currRT, globalData] = processFrame_wrapper(I_curr, prevState, ...
                                                    KLT_keypointsTracker, ...
                                                    KLT_candidateKeypointsTracker, ...
                                                    cameraParams, globalData);
     
     % TODO: update globaldata.viewSet with pose and i
+    globalData.vSet = addView(globalData.vSet, i, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4));
+
     
 end
     

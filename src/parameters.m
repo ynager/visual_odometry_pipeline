@@ -44,4 +44,4 @@ processFrame.det_method = bootstrap.det_method;
     harris.selectUniform = true;
     
     % triangulation
-    triangulation.alpha = deg2rad(45);
+    alpha_threshold = deg2rad(45);
