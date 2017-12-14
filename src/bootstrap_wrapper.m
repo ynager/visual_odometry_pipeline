@@ -130,8 +130,8 @@ for i = 1:100
     end
 end
 
-% get essential matrix
-E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix; 
+% get essential matrix (must be transposed for relativeCameraPose)
+E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix;
 
 % we arent allowed to use directly this function: 
 %[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0, matchedPoints_1, cameraParams); 
@@ -146,9 +146,9 @@ inlierPoints_1 = matchedPoints_1(inlierIdx, :);
 % Compute the camera pose from the fundamental matrix and disambiguate
 % invalid configurations using inlierPoints
 [orient, loc, validPointFraction] = ...
-        relativeCameraPose(E, cameraParams, inlierPoints_0, inlierPoints_1);
+        relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
-    
+
 if(validPointFraction < 0.9) 
     fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
 end
@@ -162,9 +162,13 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Locat
 
 %% Triangulate to get 3D points
 
+% get rotation matrix and translation vector from pose orientation and location
+R = orient; 
+t = -loc'; 
+
 % calculate camera matrices
 M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
-M2 = cameraParams.IntrinsicMatrix * [-orient, loc'];
+M2 = cameraParams.IntrinsicMatrix * [R, t];
 
 % triangulate
 xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
@@ -197,7 +201,6 @@ for i = 2:bootstrap.images(2)-1
 end
 
 %% Plotting
-
 
 %Plot bootstrap matches
 plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
