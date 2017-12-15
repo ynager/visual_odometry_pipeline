@@ -112,7 +112,7 @@ end
 fprintf('\nMatches found: %d\n', length(matchedPoints_0));
 
 % ESTIMATE FUNDAMENTAL MATRIX
-for i = 1:100
+for i = 1:bootstrap.ransac_iter
     % this function uses RANSAC and the 8-point algorithm
     [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
                  'Method','RANSAC', 'DistanceThreshold', ransac.distanceThreshold, ... 
@@ -120,7 +120,7 @@ for i = 1:100
              
     % Make sure we get enough inliers
     ratio = sum(inlierIdx) / numel(inlierIdx); 
-    if(ratio > 0.4)
+    if(ratio > 0.3)
         fprintf('Fraction of inliers: %.2f',ratio);
         break;
     end

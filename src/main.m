@@ -65,7 +65,7 @@ globalData.vSet = viewSet;  %erase if anything in there already
 [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
 % apply scale factor to match to ground truth
-globalData = applyScaleFactor(globalData); 
+%globalData = applyScaleFactor(globalData); 
 
 %% Setup Camera/Trajectory plot
 plotHandles = setupCamTrajectoryPlot(globalData); 
@@ -111,18 +111,18 @@ for i = range
                                                    KLT_keypointsTracker, ...
                                                    KLT_candidateKeypointsTracker, ...
                                                    cameraParams, globalData);
-    
-    % Apply scale factor
-    globalData = applyScaleFactor(globalData); 
+  
                                                
     % TODO: update globaldata.viewSet with pose and i
     viewId = i - bootstrap.images(2) + 2; 
     globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4)', 'Points', currState.keypoints);
 
-    updateCamTrajectoryPlot(viewId, globalData,I_curr, plotHandles); 
-    fprintf('\nnum landmarks: %d', length(globalData.landmarks)); 
+    % Apply scale factor
+    % globalData = applyScaleFactor(globalData);
     
-    pause(0.5);
+    updateCamTrajectoryPlot(viewId, globalData,I_curr, plotHandles); 
+    fprintf('\nnum landmarks: %d\n', length(globalData.landmarks));
+        
 end
     
 %% Questions
@@ -137,4 +137,7 @@ end
 
 % have a look at alpha
 % proper printouts -> what causes failure?
+
+%% Ideas
+% maybe when saving possible keypoints for later triangulation, only select k best
                

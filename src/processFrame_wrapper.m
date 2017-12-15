@@ -82,11 +82,33 @@ run('parameters.m');
 % TODO: is a isclose needed?
 ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
 
+% for being ckp member, ckp_validity needs to be 1 but ckp_redundant != 1
+wrong_validity = and(ckp_validity,ckp_redundant);
+ckp_validity(wrong_validity)=0;
+currState.candidate_kp = tracked_ckp(ckp_validity,:); %add candidates from last frames
+currState.first_obs = prevState.first_obs(ckp_validity,:);
+currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
+
 % run RANSAC to find inliers / run P3P to find new pose
 % estimateWorldCameraPose -> is p3p algo of vision toolbox
-landmarks_for_p3p = prevState.landmarks(kp_validity,:);
 kp_for_p3p = tracked_kp(kp_validity,:);
-[ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
+
+for i = 1:2
+    
+    landmarks_for_p3p = prevState.landmarks(kp_validity,:);
+    [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
+    currRT = [orient,loc];
+    
+    T = globalData.vSet.Views.Location{end-1}' - loc(:);
+    norm(T)
+    if(norm(T) < 3 || i == 2) %Check if position delta is too large
+        break; 
+    else
+        warning('Large position delta produced!')
+        [prevState,globalData] = triangulateAlphaBased(prevState, cameraParams, currRT, globalData);
+    end
+end
+
 fprintf('\nTotal matches found: %d\n', sum(inlierIdx));  
 fprintf('Fraction of inliers: %.2f',sum(inlierIdx)/length(inlierIdx));
 
@@ -95,18 +117,12 @@ fprintf('Fraction of inliers: %.2f',sum(inlierIdx)/length(inlierIdx));
 
 % prepare orient and loc for return
 % TODO: check if orient and loc are empty, in that case skip the step?
-currRT = [orient,loc];
+
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 % TODO: add used keypoints and landmarks to state, discard all others
 currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
-% for being ckp member, ckp_validity needs to be 1 but ckp_redundant != 1
-wrong_validity = and(ckp_validity,ckp_redundant);
-ckp_validity(wrong_validity)=0;
-currState.candidate_kp = tracked_ckp(ckp_validity,:); %add candidates from last frames
-currState.first_obs = prevState.first_obs(ckp_validity,:);
-currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
 
 % TODO: maybe add check if nbr kp are below thershold, if yes run triangulation
 % with candidate_kp, dont forget to set lvl to new value
@@ -116,9 +132,9 @@ currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
 % detect new candidates 
 switch processFrame.det_method
     case 'harris'
-        new_kp = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality);
+        new_kp = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality_process);
         if harris.selectUniform
-            new_kp = selectUniform(new_kp, harris.num_points, size(I_curr));       %select uniformly
+            new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));       %select uniformly
         end
     otherwise
         disp('given processFrame.det_method not yet implemented in processFrame')

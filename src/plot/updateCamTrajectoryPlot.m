@@ -26,13 +26,13 @@ set(h, 'XData', globalData.landmarks(:,1), 'YData', ...
 
 % set axis limits 5 meters larger than data
 limsx=get(plotHandles.axes1,'XLim');
-set(plotHandles.axes1,'Xlim',[limsx(1)-1, limsx(2)+1]); 
+set(plotHandles.axes1,'Xlim',[limsx(1), limsx(2)]); 
 
 limsy=get(plotHandles.axes1,'YLim');
-set(plotHandles.axes1,'Ylim',[limsy(1)-1, limsy(2)+1]); 
+set(plotHandles.axes1,'Ylim',[limsy(1), limsy(2)]); 
 
 limsz=get(plotHandles.axes1,'ZLim');
-set(plotHandles.axes1,'Zlim',[limsz(1)-1, limsz(2)+1]); 
+set(plotHandles.axes1,'Zlim',[limsz(1), limsz(2)]); 
 
 axes(plotHandles.axes2);   
 imshow(I); 
