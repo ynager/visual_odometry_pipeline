@@ -166,7 +166,8 @@ xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
 % Get unmatched candidate keypoints in second frame wich are all
 % elements in points_1 not contained in indexPairs(:,2)
 
-candidate_kp_ind = not(ismember(points_klt,inlierPoints_1.Location,'rows'));
+candidate_kp_ind = not(isClose(points_klt,inlierPoints_1.Location,is_close.delta));
+% candidate_kp_ind = not(ismember(points_klt,inlierPoints_1.Location,'rows'));
 candidate_kp = points_klt(candidate_kp_ind,:);
 % candidate_kp_ind = setdiff(1:length(points_klt),indexPairs(:,2));
 % candidate_kp = points_klt(candidate_kp_ind,:);

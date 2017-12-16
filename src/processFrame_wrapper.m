@@ -72,15 +72,23 @@ run('parameters.m');
 
 
 % track keypoints over frame
-[tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr); 
+[tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr);
 % track candidate keypoints over frame
 [tracked_ckp,ckp_validity] = step(KLT_candidateKeypointsTracker,I_curr);
+if debug.print_tracking
+    fprintf('\nKLT_kpT tracked: %d out of %d kp.',sum(kp_validity),length(kp_validity));
+    fprintf('\nKLT_ckpT tracked: %d out of %d ckp.',sum(ckp_validity),length(ckp_validity));
+end
 
 % make sure tracked_kp and tracked_ckp are not redundant
 % TODO: check 1. what values if ckp_validity is false?
 % TODO: check 2. if ismember can handle bad values from point 1.
 % TODO: is a isclose needed?
-ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
+ckp_redundant = isClose(tracked_ckp,tracked_kp,is_close.delta);
+% ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
+if debug.print_tracking
+    fprintf('\nIn Tracking: found %d redundant ckp',sum(ckp_redundant));
+end
 
 % for being ckp member, ckp_validity needs to be 1 but ckp_redundant != 1
 wrong_validity = and(ckp_validity,ckp_redundant);
@@ -92,40 +100,49 @@ currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
 % run RANSAC to find inliers / run P3P to find new pose
 % estimateWorldCameraPose -> is p3p algo of vision toolbox
 kp_for_p3p = tracked_kp(kp_validity,:);
+landmarks_for_p3p = prevState.landmarks(kp_validity,:);
 
-for i = 1:2
+for i = 1:p3p.p3p_and_ransac_iter
     
-    landmarks_for_p3p = prevState.landmarks(kp_validity,:);
+    % run 3D-2D algo
     [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
     currRT = [orient,loc];
     
-    T = globalData.vSet.Views.Location{end-1}' - loc(:);
-    norm(T)
-    if(norm(T) < 3 || i == 2) %Check if position delta is too large
+    % check delta location
+    T = globalData.vSet.Views.Location{end}' - loc(:);
+    if debug.print_p3p
+        fprintf('\nDelta loc: %.2f',norm(T));
+    end
+    if(norm(T) < p3p.max_delta_loc) %Check if position delta is too large
         break; 
+    elseif i == p3p.p3p_and_ransac_iter
+        warning('Max iter. i==%d reached, still large position delta produced!',i)
+        %TODO: skip frame if still bad localization
+        %TODO: not only check loc but also orient
+        
     else
-        warning('Large position delta produced!')
-        [prevState,globalData] = triangulateAlphaBased(prevState, cameraParams, currRT, globalData);
+        warning('Large position delta produced after %d iterations!',i)
     end
 end
 
-fprintf('\nTotal matches found: %d\n', sum(inlierIdx));  
-fprintf('Fraction of inliers: %.2f',sum(inlierIdx)/length(inlierIdx));
-
-% TODO: check delta_loc, return if bad
-%#
+if debug.print_p3p
+    fprintf('\nTotal matches found in p3p: %d', sum(inlierIdx));  
+    fprintf('\nFraction of inliers(p3p) of input kp in p3p: %.2f',sum(inlierIdx)/length(inlierIdx));
+    fprintf('\nFraction of inliers(p3p) of tracked kp: %.2f',sum(inlierIdx)/length(kp_validity));
+end
 
 % prepare orient and loc for return
-% TODO: check if orient and loc are empty, in that case skip the step?
-
+% TODO: check if orient and loc are empty, in that case skip the step
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
-% TODO: add used keypoints and landmarks to state, discard all others
+
+% add used keypoints and landmarks to state, discard all others
 currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
 
 % TODO: maybe add check if nbr kp are below thershold, if yes run triangulation
 % with candidate_kp, dont forget to set lvl to new value
+
 % check if alpha of landmarks is above threshold -> triangulate for those
 [currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
 
@@ -135,14 +152,18 @@ switch processFrame.det_method
         new_kp = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality_process);
         if harris.selectUniform
             new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));       %select uniformly
+            if debug.print_det_method
+                fprintf('\nNew features found: %d',size(new_kp,1));
+            end
         end
     otherwise
-        disp('given processFrame.det_method not yet implemented in processFrame')
+        warning('given processFrame.det_method not yet implemented in processFrame')
 end
 
 % check for redundancy and add new candidates to state and current pose to
 % first obs
-new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));
+new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],is_close.delta));
+% new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));
 currState.candidate_kp = [currState.candidate_kp; new_kp.Location(new_kp_valid,:)];
 currState.first_obs = [currState.first_obs; new_kp.Location(new_kp_valid,:)];
 currState.pose_first_obs = [currState.pose_first_obs;...

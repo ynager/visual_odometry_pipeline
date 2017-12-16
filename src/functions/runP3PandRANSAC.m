@@ -51,7 +51,7 @@ for i = 1:num_iterations
     R_C_W = R_C_W_guess(:,:,1);
     t_C_W = t_C_W_guess(:,:,1);
     
-    % If we use p3p, also consider inliers for the alternative solution.
+    % as we use p3p, also consider inliers for the alternative solution.
     projected_points = projectLandmarksToSensor(...
         (R_C_W_guess(:,:,2) * landmarks_for_p3p') + ...
         repmat(t_C_W_guess(:,:,2), ...
@@ -75,6 +75,7 @@ for i = 1:num_iterations
     
 end
 
+% TODO: handle this
 if max_num_inliers == 0
     orient = [];
     loc = [];

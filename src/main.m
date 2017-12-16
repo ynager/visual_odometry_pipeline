@@ -57,15 +57,25 @@ cameraParams = cameraParameters('IntrinsicMatrix', K);
 clear K;
 
 %% 	BOOTSTRAP
-close all;
+for i = 1:bootstrap.numTrials
+    close all;
 
-globalData.vSet = viewSet;  %erase if anything in there already
+    globalData.vSet = viewSet;  %erase if anything in there already
 
-% run bootstrap: Estimating the pose of the second view relative to the first view
-[currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
+    % run bootstrap: Estimating the pose of the second view relative to the first view
+    [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
-% apply scale factor to match to ground truth
-%globalData = applyScaleFactor(globalData); 
+    if and(globalData.vSet.Views.Location{end}(1)' > bootstrap.x_interval(1),...
+            globalData.vSet.Views.Location{end}(1)' < bootstrap.x_interval(2))
+        break;
+    elseif i == bootstrap.numTrials
+        warning('bad x value in bootstrap after max iterations')
+    end
+        
+    
+    % apply scale factor to match to ground truth
+    %globalData = applyScaleFactor(globalData); 
+end
 
 %% Setup Camera/Trajectory plot
 plotHandles = setupCamTrajectoryPlot(globalData); 
@@ -123,6 +133,9 @@ for i = range
     updateCamTrajectoryPlot(viewId, globalData,I_curr, plotHandles); 
     fprintf('\nnum landmarks: %d\n', length(globalData.landmarks));
         
+    if debug.keyboard_interrupt
+        keyboard
+    end
 end
     
 %% Questions
@@ -135,7 +148,12 @@ end
 
 %% TODO general
 
-% have a look at alpha
+% use select uniform at beginning of each step (better than all new kp?)
+
+% triang behind cameras???? MUST NOT happen!
+
+% implement threshold of loc and orient -> skip view if bad!
+
 % proper printouts -> what causes failure?
 
 %% Ideas

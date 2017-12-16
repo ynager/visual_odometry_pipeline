@@ -23,6 +23,12 @@ bearings_prev = getBearingVector( currState.first_obs, cameraParams.IntrinsicMat
 %used for deleting candidates later
 success = logical(zeros(size(currState.pose_first_obs,1),1));
 
+if debug.print_triangulation
+    book_alpha = zeros(size(currState.pose_first_obs,1),1);
+    book_alpha_high = zeros(size(currState.pose_first_obs,1),1);
+    book_rep_e = zeros(size(currState.pose_first_obs,1),1);
+end
+
 for i = 1:size(currState.pose_first_obs,1)
     
     %get bearing and R and T
@@ -37,8 +43,12 @@ for i = 1:size(currState.pose_first_obs,1)
     %test alpha
     alpha = atan2(norm(cross(bearings_prev_W,bearings_curr_W(:,i))),dot(bearings_prev_W,bearings_curr_W(:,i)));
     
+    if debug.print_triangulation
+        book_alpha(i) = alpha;
+    end
+    
     %if alpha above threshold, do triangulation
-    if alpha > alpha_threshold
+    if alpha > triang.alpha_threshold
         
         % get M
         M1 = cameraParams.IntrinsicMatrix * [R1, -T1]; 
@@ -46,6 +56,15 @@ for i = 1:size(currState.pose_first_obs,1)
         % TODO: maybe use reprojectionErrors as decision hot to proceed?
         % triangulate
         [xyzPoints, reprojectionErrors] = triangulate(currState.candidate_kp(i,:), currState.first_obs(i,:), M2', M1');
+        
+        if reprojectionErrors > triang.rep_e_threshold %skip this triangulation if reprojection error too high
+        	continue 
+        end
+        
+        if debug.print_triangulation
+            book_rep_e(i) = reprojectionErrors;
+            book_alpha_high(i) = alpha;
+        end
         
         % save to current State and globalData
         currState.keypoints = [currState.keypoints; currState.candidate_kp(i,:)];
@@ -55,11 +74,29 @@ for i = 1:size(currState.pose_first_obs,1)
         success(i)=true;
     end
 end
-fprintf('\nTriangulation, created new landmarks: %d',sum(success));
+
+if debug.print_triangulation
+    fprintf('\nTriangulation, mean alpha high: %.2f',rad2deg(mean(book_alpha_high(success))));
+    fprintf('\nTriangulation, min alpha high: %.2f',rad2deg(min(book_alpha_high(success))));
+    fprintf('\nTriangulation, max alpha high: %.2f',rad2deg(max(book_alpha_high(success))));
+    
+    fprintf('\nTriangulation, mean alpha: %.2f',rad2deg(mean(book_alpha)));
+    fprintf('\nTriangulation, min alpha: %.2f',rad2deg(min(book_alpha)));
+    fprintf('\nTriangulation, max alpha: %.2f',rad2deg(max(book_alpha)));
+    
+    fprintf('\nTriangulation, mean reprojE: %.2f',mean(book_rep_e(success)));
+    fprintf('\nTriangulation, min reprojE: %.2f',min(book_rep_e(success)));
+    fprintf('\nTriangulation, max reprojE: %.2f',max(book_rep_e(success))); 
+%     figure(3)
+%     histogram(book_rep_e(success),'BinWidth',0.5)
+end
+
+if debug.print_new_landmarks
+    fprintf('\nTriangulation, created new landmarks: %d',sum(success));
+end
 %delete used candidates
 currState.candidate_kp(success,:) = [];
 currState.first_obs(success,:) = [];
 currState.pose_first_obs(success,:) = [];
 
 end
-
