@@ -1,4 +1,5 @@
 function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles)
+warning off; 
 
 % Move the estimated camera in the plot
 h = plotHandles.axes1.Children(5);
