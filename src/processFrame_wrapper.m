@@ -149,7 +149,7 @@ currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 % detect new candidates 
 switch processFrame.det_method
     case 'harris'
-        new_kp = detectHarrisFeatures(I_curr, 'MinQuality', harris.min_quality_process);
+        new_kp = detectHarrisFeatures(I_curr, 'MinQuality', processFrame.harris.min_quality_process);
 %         if harris.selectUniform
 %             new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));       %select uniformly
 %             if debug.print_det_method
@@ -161,9 +161,10 @@ switch processFrame.det_method
 end
 
 %%%%%%%%%test: first isClose, then selectUniform%%%%%%%%%%%%
-new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],is_close.delta));
+new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],select_uniform.delta));
 new_kp = new_kp(new_kp_valid);
-new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));
+new_kp = selectKeypoints(new_kp);
+% new_kp = selectUniform(new_kp, processFrame.harris.num_points_process, size(I_curr));
 fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
 % check for redundancy and add new candidates to state and current pose to
 % first obs

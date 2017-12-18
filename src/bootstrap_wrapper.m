@@ -52,21 +52,25 @@ I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
 switch bootstrap.det_method
     case 'harris'
         points_0 = detectHarrisFeatures(I_0, 'MinQuality', harris.min_quality); %detect
-        points_0 = selectUniform(points_0, harris.num_points, size(I_0));       %select uniformly
+%         points_0 = selectUniform(points_0, harris.num_points, size(I_0));       %select uniformly
         
         points_1 = detectHarrisFeatures(I_1, 'MinQuality', harris.min_quality); %detect
-        points_1 = selectUniform(points_1, harris.num_points, size(I_1));       %select uniformly
+%         points_1 = selectUniform(points_1, harris.num_points, size(I_1));       %select uniformly
         
     case 'fast'
         points_0 = detectFASTFeatures(I_0, 'MinQuality', fast.min_quality);
-        points_0 = selectUniform(points_0, fast.num_points, size(I_0));
+%         points_0 = selectUniform(points_0, fast.num_points, size(I_0));
         
         points_1 = detectFASTFeatures(I_1, 'MinQuality', fast.min_quality);
-        points_1 = selectUniform(points_1, fast.num_points, size(I_1));
+%         points_1 = selectUniform(points_1, fast.num_points, size(I_1));
         
     otherwise
         disp('given bootstrap.det_method not yet implemented')
 end
+
+%%%%%test selectKeypoints instead of selectUniform%%%%%%%%%%%
+points_0 = selectKeypoints(points_0);
+points_1 = selectKeypoints(points_1);
 
 % USE KLT
 if(bootstrap.use_KLT)  

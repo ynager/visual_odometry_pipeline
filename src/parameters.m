@@ -9,7 +9,7 @@ debug.print_p3p = true; %prints for p3p in processFrame
 debug.print_triangulation = true; % for alpha value based triangulation in processFrame
 debug.print_new_landmarks = true; % for nbr of new landmarks in triangulation
 debug.print_det_method = true; % for detection of new keypoints
-debug.keyboard_interrupt = true; %interruption after each frame
+debug.keyboard_interrupt = false; %interruption after each frame
 
 % params for datasets
 switch(ds)
@@ -35,7 +35,8 @@ switch(ds)
             fast.min_quality = 0.01;
             fast.num_points = 20000; 
 
-
+        select_uniform.delta = 8; %radius for non-maximum supression
+            
         ransac.numTrials = 10000; %ransac inside of estimateFundamentalMatrix
         ransac.distanceThreshold = 0.01; 
         ransac.confidence = 99.9; 
@@ -67,7 +68,7 @@ switch(ds)
         
 
         % triangulation
-        triang.alpha_threshold = deg2rad(8); % 20 init
+        triang.alpha_threshold = deg2rad(5); % 20 init
         triang.rep_e_threshold = 2; %init 3 % max allowed reprojection error in triangulation
         
 
@@ -76,5 +77,8 @@ switch(ds)
         
             % harris
             harris.selectUniform = true;
+            processFrame.harris.num_points_process = 20;
+            processFrame.harris.min_quality_process = 0.01;
+
             
 end
