@@ -82,7 +82,7 @@ plotHandles = setupCamTrajectoryPlot(globalData);
 
 % update Camera/Trajectory plot
 I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
-updateCamTrajectoryPlot(viewId, globalData,I_1, plotHandles); 
+updateCamTrajectoryPlot(viewId, globalData, currState, I_1, plotHandles); 
 
 %% Continuous operation
 
@@ -130,7 +130,7 @@ for i = range
     % Apply scale factor
     % globalData = applyScaleFactor(globalData);
     
-    updateCamTrajectoryPlot(viewId, globalData,I_curr, plotHandles); 
+    updateCamTrajectoryPlot(viewId, globalData, currState, I_curr, plotHandles); 
     fprintf('\nnum landmarks: %d\n', length(globalData.landmarks));
         
     if debug.keyboard_interrupt
