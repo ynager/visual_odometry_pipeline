@@ -1,4 +1,4 @@
-function updateCamTrajectoryPlot(viewId, globalData,I, plotHandles)
+function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles)
 
 % Move the estimated camera in the plot
 h = plotHandles.axes1.Children(4);
@@ -39,8 +39,11 @@ imshow(I);
 num_inliers = length(globalData.vSet.Views.Points{viewId}); 
 title(['Number of inliers: ',num2str(num_inliers)]);
 hold on; 
-x = globalData.vSet.Views.Points{viewId}(:,1);
-y = globalData.vSet.Views.Points{viewId}(:,2); 
+
+%draw points
+scatter(currState.candidate_kp(:,1), currState.candidate_kp(:,2), 5, 'blue', 'filled', 'Marker', 'o'); 
+scatter(currState.keypoints(:,1), currState.keypoints(:,2), 5, 'green', 'filled', 'Marker', 'o'); 
+hold off; 
 
 %draw displacement vectors
 %for i = 1:num_inliers
@@ -52,9 +55,6 @@ y = globalData.vSet.Views.Points{viewId}(:,2);
 %    plot([x_from; x_to], [y_from; y_to], 'r-', 'Linewidth', 0.2);
 %    hold on; 
 %end
-
-%draw points
-scatter(x,y,5,'green','filled','Marker','o'); 
 
 
 
