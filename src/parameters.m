@@ -35,7 +35,7 @@ switch(ds)
             fast.min_quality = 0.01;
             fast.num_points = 20000; 
 
-        select_uniform.delta = 8; %radius for non-maximum supression
+        select_uniform.delta = 4; %radius for non-maximum supression
             
         ransac.numTrials = 10000; %ransac inside of estimateFundamentalMatrix
         ransac.distanceThreshold = 0.01; 
@@ -49,19 +49,19 @@ switch(ds)
 
         % KLT point Tracker
         klt.NumPyramidLevels = 3; % TODO: nbr was mentioned in lecture
-        klt.MaxBidirectionalError = 2; %5 % if inf, is not calculated
+        klt.MaxBidirectionalError = 5; %5 % if inf, is not calculated
         klt.BlockSize = [31 31];
         klt.MaxIterations = 1000;
         
         % isClose fct
-        is_close.delta = 2; %0.5; %in pixel, treated as same keypoint if within delta
+        is_close.delta = 1; %0.5; %in pixel, treated as same keypoint if within delta
 
         % p3p 3D-2D algo
-        p3p.p3p_and_ransac_iter = 10;
+        p3p.p3p_and_ransac_iter = 3;
         
             % ransac inside of runP3PandRANSAC
-            p3p_ransac.num_iteration = 5000;
-            p3p_ransac.pixel_tolerance = 1; % 2 init, better
+            p3p_ransac.num_iteration = 1000;
+            p3p_ransac.pixel_tolerance = 5; % 2 init, better
             p3p_ransac.min_inlier = 10;
             
         p3p.max_delta_loc = 1;
@@ -69,7 +69,7 @@ switch(ds)
 
         % triangulation
         triang.alpha_threshold = deg2rad(5); % 20 init
-        triang.rep_e_threshold = 2; %init 3 % max allowed reprojection error in triangulation
+        triang.rep_e_threshold = 0.2; %init 3 % max allowed reprojection error in triangulation
         
 
         % detect new candidate kp
@@ -77,8 +77,8 @@ switch(ds)
         
             % harris
             harris.selectUniform = true;
-            processFrame.harris.num_points_process = 20;
-            processFrame.harris.min_quality_process = 0.01;
+            processFrame.harris.num_points_process = 100;
+            processFrame.harris.min_quality_process = 0.001;
 
             
 end

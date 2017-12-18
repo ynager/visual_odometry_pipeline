@@ -108,6 +108,10 @@ for i = 1:p3p.p3p_and_ransac_iter
     [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
     currRT = [orient,loc];
     
+    if(isempty(loc) || isempty(orient))
+        continue
+    end
+    
     % check delta location
     T = globalData.vSet.Views.Location{end}' - loc(:);
     if debug.print_p3p
