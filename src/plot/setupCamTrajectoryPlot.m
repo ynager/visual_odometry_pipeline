@@ -1,5 +1,7 @@
 function plotHandles = setupCamTrajectoryPlot(globalData)
 
+close all;
+
 %Setup Figure
 %************************************************************************
 figure();

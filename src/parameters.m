@@ -9,7 +9,7 @@ debug.print_p3p = true; %prints for p3p in processFrame
 debug.print_triangulation = true; % for alpha value based triangulation in processFrame
 debug.print_new_landmarks = true; % for nbr of new landmarks in triangulation
 debug.print_det_method = true; % for detection of new keypoints
-debug.keyboard_interrupt = false; %interruption after each frame
+debug.keyboard_interrupt = true; %interruption after each frame
 
 % params for datasets
 switch(ds)
@@ -53,7 +53,7 @@ switch(ds)
         klt.MaxIterations = 1000;
         
         % isClose fct
-        is_close.delta = 0.5; %in pixel, treated as same keypoint if within delta
+        is_close.delta = 2; %0.5; %in pixel, treated as same keypoint if within delta
 
         % p3p 3D-2D algo
         p3p.p3p_and_ransac_iter = 10;
