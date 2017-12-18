@@ -51,7 +51,7 @@ for i = 1:size(currState.pose_first_obs,1)
     end
     
     %if alpha above threshold, do triangulation
-    if alpha > triang.alpha_threshold && alpha < deg2rad(25)
+    if alpha > triang.alpha_threshold(1) && alpha < triang.alpha_threshold(2)
         
         % get M
         M1 = cameraParams.IntrinsicMatrix * [R1, -T1]; 

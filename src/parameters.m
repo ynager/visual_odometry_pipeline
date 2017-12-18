@@ -68,7 +68,7 @@ switch(ds)
         
 
         % triangulation ************************************************
-        triang.alpha_threshold = deg2rad(3);        % 20 init
+        triang.alpha_threshold = [deg2rad(3), deg2rad(30)];        % 20 init
         triang.rep_e_threshold = 0.5;               %init 3 % max allowed reprojection error in triangulation
         triang.radius_threshold = 60;                     % max allowable radius from cam
         triang.num_landmarks = 300;                 % number of landmarks to select
