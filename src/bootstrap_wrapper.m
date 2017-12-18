@@ -52,17 +52,17 @@ I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
 switch bootstrap.det_method
     case 'harris'
         points_0 = detectHarrisFeatures(I_0, 'MinQuality', harris.min_quality); %detect
-%         points_0 = selectUniform(points_0, harris.num_points, size(I_0));       %select uniformly
+%        points_0 = selectUniform(points_0, harris.num_points, size(I_0));       %select uniformly
         
         points_1 = detectHarrisFeatures(I_1, 'MinQuality', harris.min_quality); %detect
-%         points_1 = selectUniform(points_1, harris.num_points, size(I_1));       %select uniformly
+%        points_1 = selectUniform(points_1, harris.num_points, size(I_1));       %select uniformly
         
     case 'fast'
         points_0 = detectFASTFeatures(I_0, 'MinQuality', fast.min_quality);
-%         points_0 = selectUniform(points_0, fast.num_points, size(I_0));
+%        points_0 = selectUniform(points_0, fast.num_points, size(I_0));
         
         points_1 = detectFASTFeatures(I_1, 'MinQuality', fast.min_quality);
-%         points_1 = selectUniform(points_1, fast.num_points, size(I_1));
+%        points_1 = selectUniform(points_1, fast.num_points, size(I_1));
         
     otherwise
         disp('given bootstrap.det_method not yet implemented')
@@ -164,7 +164,13 @@ M1 = cameraParams.IntrinsicMatrix * eye(3,4);
 M2 = cameraParams.IntrinsicMatrix * [R, t];
 
 % triangulate
-xyzPoints = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
+[xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
+
+% filter
+[xyzPoints, ind_filt] = getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  triang.radius_threshold, triang.num_landmarks_bootstrap);
+inlierPoints_0 = inlierPoints_0(ind_filt);
+inlierPoints_1 = inlierPoints_1(ind_filt);
+
 
 %% Generate initial state
 % Get unmatched candidate keypoints in second frame wich are all
@@ -176,7 +182,7 @@ candidate_kp = points_klt(candidate_kp_ind,:);
 % candidate_kp_ind = setdiff(1:length(points_klt),indexPairs(:,2));
 % candidate_kp = points_klt(candidate_kp_ind,:);
 
-currState.keypoints = inlierPoints_1.Location; 
+currState.keypoints = inlierPoints_1.Location;
 
 currState.landmarks = xyzPoints; 
 currState.candidate_kp = candidate_kp; 
