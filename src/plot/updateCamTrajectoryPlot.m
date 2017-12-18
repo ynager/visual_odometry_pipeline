@@ -43,7 +43,7 @@ hold on;
 %draw points
 scatter(currState.candidate_kp(:,1), currState.candidate_kp(:,2), 5, 'blue', 'filled', 'Marker', 'o'); 
 scatter(currState.keypoints(:,1), currState.keypoints(:,2), 5, 'green', 'filled', 'Marker', 'o'); 
-
+hold off; 
 
 %draw displacement vectors
 %for i = 1:num_inliers
