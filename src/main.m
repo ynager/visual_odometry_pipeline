@@ -136,9 +136,18 @@ for i = range
     if debug.keyboard_interrupt
         keyboard
     end
+    pause(0.1)
 end
     
 %% Questions
+
+% newest ideas:
+% -vectorize NonMaxsupression
+% -function best landmarks (z-threshold/behincam/with lowest reprojection
+% error)
+% - lower and upper threshold alpha
+% -ajust all other params :D
+% - 
 
 % keypoints at end of step: still containing the outlier keypoints in p3p?
 % i.e. only discard keypoints when failed to track?

@@ -58,6 +58,7 @@ for i = 1:size(currState.pose_first_obs,1)
         [xyzPoints, reprojectionErrors] = triangulate(currState.candidate_kp(i,:), currState.first_obs(i,:), M2', M1');
         
         if reprojectionErrors > triang.rep_e_threshold %skip this triangulation if reprojection error too high
+            
         	continue 
         end
         

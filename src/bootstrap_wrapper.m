@@ -70,7 +70,6 @@ end
 
 %%%%%test selectKeypoints instead of selectUniform%%%%%%%%%%%
 points_0 = selectKeypoints(points_0);
-points_1 = selectKeypoints(points_1);
 
 % USE KLT
 if(bootstrap.use_KLT)  
@@ -92,7 +91,7 @@ if(bootstrap.use_KLT)
 
 % USE FEATURE MATCHING
 else  
-    
+    points_1 = selectKeypoints(points_1);
     % Extract features at selected points
     switch bootstrap.desc_method
         case 'HOG'
