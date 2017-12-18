@@ -147,7 +147,7 @@ end
 % error)
 % - lower and upper threshold alpha
 % -ajust all other params :D
-% - 
+% - proper folder/naming of files and params
 
 % keypoints at end of step: still containing the outlier keypoints in p3p?
 % i.e. only discard keypoints when failed to track?

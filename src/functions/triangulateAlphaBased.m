@@ -29,6 +29,9 @@ if debug.print_triangulation
     book_rep_e = zeros(size(currState.pose_first_obs,1),1);
 end
 
+reprojection_errors = zeros(size(currState.pose_first_obs,1),1);
+unfiltered_landmarks = zeros(size(currState.pose_first_obs,1),3);
+
 for i = 1:size(currState.pose_first_obs,1)
     
     %get bearing and R and T
@@ -48,19 +51,23 @@ for i = 1:size(currState.pose_first_obs,1)
     end
     
     %if alpha above threshold, do triangulation
-    if alpha > triang.alpha_threshold
+    if alpha > triang.alpha_threshold(1) && alpha < triang.alpha_threshold(2)
         
         % get M
         M1 = cameraParams.IntrinsicMatrix * [R1, -T1]; 
         
         % TODO: maybe use reprojectionErrors as decision hot to proceed?
         % triangulate
-        [xyzPoints, reprojectionErrors] = triangulate(currState.candidate_kp(i,:), currState.first_obs(i,:), M2', M1');
+        [xyzPoints, reprojectionErrors] = triangulate(currState.first_obs(i,:),currState.candidate_kp(i,:), M1', M2');
         
         if reprojectionErrors > triang.rep_e_threshold %skip this triangulation if reprojection error too high
             
         	continue 
         end
+        
+        % Fill in unfiltered values of every triangulated point 
+        unfiltered_landmarks(i,:) = xyzPoints; 
+        reprojection_errors(i) = reprojectionErrors; 
         
         if debug.print_triangulation
             book_rep_e(i) = reprojectionErrors;
@@ -68,13 +75,25 @@ for i = 1:size(currState.pose_first_obs,1)
         end
         
         % save to current State and globalData
-        currState.keypoints = [currState.keypoints; currState.candidate_kp(i,:)];
-        currState.landmarks = [currState.landmarks; xyzPoints];
-        globalData.landmarks = [globalData.landmarks; xyzPoints];
+        %currState.keypoints = [currState.keypoints; currState.candidate_kp(i,:)];
+        %currState.landmarks = [currState.landmarks; xyzPoints];
+        %globalData.landmarks = [globalData.landmarks; xyzPoints];
         
         success(i)=true;
     end
 end
+
+% filter landmarks to get only the best num_landmarks inside
+% landmark_radius
+fprintf('\nnumber of unfiltered landmarks: %d\n',length(unfiltered_landmarks));
+fprintf('sum success: %d\n',sum(success)); 
+[xyzPoints_filt, ind_filt] = getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, triang.radius_threshold, triang.num_landmarks);    
+fprintf('number of filtered landmarks: %d\n',length(xyzPoints_filt));
+
+% save to current State and globalData
+currState.keypoints = [currState.keypoints; currState.candidate_kp(ind_filt,:)]; 
+currState.landmarks = [currState.landmarks; xyzPoints_filt]; 
+globalData.landmarks = [globalData.landmarks; xyzPoints_filt]; 
 
 if debug.print_triangulation
     fprintf('\nTriangulation, mean alpha high: %.2f',rad2deg(mean(book_alpha_high(success))));
@@ -96,8 +115,8 @@ if debug.print_new_landmarks
     fprintf('\nTriangulation, created new landmarks: %d',sum(success));
 end
 %delete used candidates
-currState.candidate_kp(success,:) = [];
-currState.first_obs(success,:) = [];
-currState.pose_first_obs(success,:) = [];
+currState.candidate_kp(ind_filt,:) = [];
+currState.first_obs(ind_filt,:) = [];
+currState.pose_first_obs(ind_filt,:) = [];
 
 end

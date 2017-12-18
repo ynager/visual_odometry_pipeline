@@ -30,9 +30,10 @@ view(0, 0);
 plot3(0, 0, 0, 'b-', 'LineWidth',2);
 hold on; 
 plot3(0, 0, 0, 'k:', 'LineWidth',2);
-scatter3([], [], [],10,'black','filled','Marker','o');
+scatter3([], [], [],5,'black','filled','Marker','o');
+scatter3([], [], [],10,'green','filled','Marker','o');
 
-legend('Estimated Trajectory', 'Ground Truth', 'Point Cloud', ...
+legend('Estimated Trajectory', 'Ground Truth', 'Total landmarks', 'currState landmarks', ...
     'location','north');
 view(0, 0);
 
