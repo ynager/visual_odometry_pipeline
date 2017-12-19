@@ -51,7 +51,7 @@ for i = 1:size(currState.pose_first_obs,1)
     end
     
     %if alpha above threshold, do triangulation
-    if alpha > triang.alpha_threshold(1) && alpha < triang.alpha_threshold(2)
+    if alpha > processFrame.triang.alpha_threshold(1) && alpha < processFrame.triang.alpha_threshold(2)
         
         % get M
         M1 = cameraParams.IntrinsicMatrix * [R1, -T1]; 
@@ -60,7 +60,7 @@ for i = 1:size(currState.pose_first_obs,1)
         % triangulate
         [xyzPoints, reprojectionErrors] = triangulate(currState.first_obs(i,:),currState.candidate_kp(i,:), M1', M2');
         
-        if reprojectionErrors > triang.rep_e_threshold %skip this triangulation if reprojection error too high
+        if reprojectionErrors > processFrame.triang.rep_e_threshold %skip this triangulation if reprojection error too high
             
         	continue 
         end
@@ -87,7 +87,7 @@ end
 % landmark_radius
 fprintf('\nnumber of unfiltered landmarks: %d\n',length(unfiltered_landmarks));
 fprintf('sum success: %d\n',sum(success)); 
-[xyzPoints_filt, ind_filt] = getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, triang.radius_threshold, triang.num_landmarks);    
+[xyzPoints_filt, ind_filt] = getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.num_landmarks);    
 fprintf('number of filtered landmarks: %d\n',length(xyzPoints_filt));
 
 % save to current State and globalData

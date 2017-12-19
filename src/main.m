@@ -57,7 +57,7 @@ cameraParams = cameraParameters('IntrinsicMatrix', K);
 clear K;
 
 %% 	BOOTSTRAP
-for i = 1:bootstrap.numTrials
+for i = 1:bootstrap.init.numTrials
     close all;
 
     globalData.vSet = viewSet;  %erase if anything in there already
@@ -65,10 +65,10 @@ for i = 1:bootstrap.numTrials
     % run bootstrap: Estimating the pose of the second view relative to the first view
     [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
-    if and(globalData.vSet.Views.Location{end}(1)' > bootstrap.x_interval(1),...
-            globalData.vSet.Views.Location{end}(1)' < bootstrap.x_interval(2))
+    if and(globalData.vSet.Views.Location{end}(1)' > bootstrap.init.x_interval(1),...
+            globalData.vSet.Views.Location{end}(1)' < bootstrap.init.x_interval(2))
         break;
-    elseif i == bootstrap.numTrials
+    elseif i == bootstrap.init.numTrials
         warning('bad x value in bootstrap after max iterations')
     end
         
@@ -93,15 +93,15 @@ updateCamTrajectoryPlot(viewId, globalData, currState, I_1, plotHandles);
 % initialize Kanade-Lucas-Tomasi (KLT) point tracker for keypoints and
 % candidate keypoints
 % TODO: set backtracking in KLT flag true!!
-KLT_keypointsTracker = vision.PointTracker('NumPyramidLevels', klt.NumPyramidLevels, ...
-                                'MaxBidirectionalError', klt.MaxBidirectionalError, ...
-                                'BlockSize', klt.BlockSize, ...
-                                'MaxIterations', klt.MaxIterations);
+KLT_keypointsTracker = vision.PointTracker('NumPyramidLevels', processFrame.klt.NumPyramidLevels, ...
+                                'MaxBidirectionalError', processFrame.klt.MaxBidirectionalError, ...
+                                'BlockSize', processFrame.klt.BlockSize, ...
+                                'MaxIterations', processFrame.klt.MaxIterations);
                             
-KLT_candidateKeypointsTracker = vision.PointTracker('NumPyramidLevels', klt.NumPyramidLevels, ...
-                                'MaxBidirectionalError', klt.MaxBidirectionalError, ...
-                                'BlockSize', klt.BlockSize, ...
-                                'MaxIterations', klt.MaxIterations);                            
+KLT_candidateKeypointsTracker = vision.PointTracker('NumPyramidLevels', processFrame.klt.NumPyramidLevels, ...
+                                'MaxBidirectionalError', processFrame.klt.MaxBidirectionalError, ...
+                                'BlockSize', processFrame.klt.BlockSize, ...
+                                'MaxIterations', processFrame.klt.MaxIterations);                            
 
 % initialize Tracker
 I_curr = loadImage(ds, bootstrap.images(end), cameraParams);
@@ -141,21 +141,26 @@ end
     
 %% Questions
 
-% newest ideas:
-% -vectorize NonMaxsupression
-% -function best landmarks (z-threshold/behincam/with lowest reprojection
-% error)
-% - lower and upper threshold alpha
-% -ajust all other params :D
-% - proper folder/naming of files and params
-
-% keypoints at end of step: still containing the outlier keypoints in p3p?
-% i.e. only discard keypoints when failed to track?
-
 % should we implement a delta_loc max threshold? (or orientation
 % threshold?)
 
+
 %% TODO general
+
+% -function best landmarks (z-threshold/behincam/with lowest reprojection
+% error)
+
+% handle failed localization in p3p ransac
+
+% bootsrap kp candidates -> maybe search freshly on I1
+
+% dont do clac for img1 in bootstrap if not necessary
+
+% landmark filter: keep only ~300 best landmark/keypoints, all
+% other:discard
+
+% bootstrap: candidate_kp -> new detection like in processFrame, not
+% outliers
 
 % use select uniform at beginning of each step (better than all new kp?)
 

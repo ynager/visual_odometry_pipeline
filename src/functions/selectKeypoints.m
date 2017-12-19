@@ -1,4 +1,4 @@
-function final_keypoints = selectKeypoints(keypoints)
+function final_keypoints = selectKeypoints(keypoints, delta, nbr_pts, viaMatrix_method)
 % performs a non-maximum supression of a (2r + 1)*(2r + 1) box around the
 % current maximum of input keypoints.
 % input: keypoints -> a cornerPoints object, created by e.g. HarrisDetector
@@ -7,9 +7,9 @@ function final_keypoints = selectKeypoints(keypoints)
 % get parameters
 run('parameters.m');
 
-if select_uniform.viaMatrix_method
-    r = select_uniform.delta;
-    num = select_uniform.nbr_pts;
+if viaMatrix_method
+    r = delta;
+    num = nbr_pts;
 
     X = keypoints.Location(:,1);
     Y = keypoints.Location(:,2);
@@ -20,7 +20,10 @@ if select_uniform.viaMatrix_method
     ind = sub2ind(size(temp_scores),ceil(Y),ceil(X));
     temp_scores(ind) = keypoints.Metric;
     temp_scores = padarray(temp_scores, [r r]);
-    % temp_scores = sparse(temp_scores);
+    if processFrame.select_keypoints.sparseMatrix
+        temp_scores = sparse(temp_scores);
+    end
+    
     for i = 1:num
         [val, kp] = max(temp_scores(:));
         if val==0
@@ -37,7 +40,6 @@ if select_uniform.viaMatrix_method
     final_keypoints = cornerPoints(final_keypoints);
 
 else
-    delta = select_uniform.delta;
 
     is_final = logical(zeros(size(keypoints.Metric)));
 
@@ -46,7 +48,7 @@ else
 
     keypoints_location = keypoints.Location;
     
-    for i = 1:k
+    for i = 1:nbr_pts
         [val, idx] = max(temp_metric);
         if val==0
             break

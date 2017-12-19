@@ -3,10 +3,10 @@ function [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for
 
 % get parameters
 run('parameters.m');
-num_iterations = p3p_ransac.num_iteration;
-pixel_tolerance = p3p_ransac.pixel_tolerance;
+num_iterations = processFrame.p3p_ransac.num_iteration;
+pixel_tolerance = processFrame.p3p_ransac.pixel_tolerance;
 k = 3;    
-min_inlier_count = p3p_ransac.min_inlier;
+min_inlier_count = processFrame.p3p_ransac.min_inlier;
 
 % Initialize RANSAC.
 inlierIdx = zeros(size(kp_for_p3p, 1),1);

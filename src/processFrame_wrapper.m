@@ -46,30 +46,10 @@ function [currState, currRT, globalData] = processFrame_wrapper(I_curr, ...
 %       currRT: current pose and location as [R,T] = [3x3  3x1]
 %
 
-% TODOs: 
-% -Use KLT tracking+RANSAC (of exercise 7, for KLT use vision.PointTracker)
-% instead of matchFeatures+RANSAC. to match keypoints of new image to
-% previous image
-% -add new not-machted(tracking failed) keypoints to candidate keypoints
-% -Track candidate keyppoints (and keypoints).
-% -Estimate current pose by P3P, do this in RANSAC step of above
-% -check in every step the portion of used landmarks: compare matched
-% keyponts to available keyponts. if e.g. 20% lost: triangulate new
-% landmarks based on candidate keyponts.
-% PROBLEM: how to find 20%? maybe add nbr_landmark_threshold to state???
-% -(maybe) check that new to-be-added candidate keypoints are not redundant
-% with other keypoints or candidate keypoints
-% -in triangulation: check threshold alpha before using traingulated point.
-% -update input and output infos in function header
-% -check where lens distortion needs to be considered
-
 %% source code
 
 % get parameters
 run('parameters.m');
-
-%TODO: INITIALIZE TRACKER HERE or somewhere else? use setPoints...
-
 
 % track keypoints over frame
 [tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr);
@@ -83,8 +63,7 @@ end
 % make sure tracked_kp and tracked_ckp are not redundant
 % TODO: check 1. what values if ckp_validity is false?
 % TODO: check 2. if ismember can handle bad values from point 1.
-% TODO: is a isclose needed?
-ckp_redundant = isClose(tracked_ckp,tracked_kp,is_close.delta);
+ckp_redundant = isClose(tracked_ckp,tracked_kp,processFrame.is_close.delta);
 % ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
 if debug.print_tracking
     fprintf('\nIn Tracking: found %d redundant ckp',sum(ckp_redundant));
@@ -102,7 +81,7 @@ currState.pose_first_obs = prevState.pose_first_obs(ckp_validity,:);
 kp_for_p3p = tracked_kp(kp_validity,:);
 landmarks_for_p3p = prevState.landmarks(kp_validity,:);
 
-for i = 1:p3p.p3p_and_ransac_iter
+for i = 1:processFrame.localization.numTrials
     
     % run 3D-2D algo
     [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
@@ -117,9 +96,9 @@ for i = 1:p3p.p3p_and_ransac_iter
     if debug.print_p3p
         fprintf('\nDelta loc: %.2f',norm(T));
     end
-    if(norm(T) < p3p.max_delta_loc) %Check if position delta is too large
+    if(norm(T) < processFrame.p3p.max_delta_loc) %Check if position delta is too large
         break; 
-    elseif i == p3p.p3p_and_ransac_iter
+    elseif i == processFrame.localization.numTrials
         warning('Max iter. i==%d reached, still large position delta produced!',i)
         %TODO: skip frame if still bad localization
         %TODO: not only check loc but also orient
@@ -165,14 +144,20 @@ switch processFrame.det_method
 end
 
 %%%%%%%%%test: first isClose, then selectUniform%%%%%%%%%%%%
-new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],select_uniform.delta));
+new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.select_keypoints.delta));
 new_kp = new_kp(new_kp_valid);
-new_kp = selectKeypoints(new_kp);
-% new_kp = selectUniform(new_kp, processFrame.harris.num_points_process, size(I_curr));
-fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
+if processFrame.select_by_nonMax
+    new_kp = selectKeypoints(new_kp, processFrame.select_keypoints.delta, processFrame.select_keypoints.nbr_pts, processFrame.select_keypoints.viaMatrix_method);
+else
+    new_kp = selectUniform(new_kp, processFrame.harris.num_points, size(I_curr));
+end
+
+if debug.print_new_features
+    fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
+end
 % check for redundancy and add new candidates to state and current pose to
 % first obs
-% new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],is_close.delta));
+% new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.is_close.delta));
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 % new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));

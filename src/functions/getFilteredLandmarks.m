@@ -17,6 +17,7 @@ inliers_ind = find(~outliers);
 
 %get final filtered indices and landmarks
 ind = inliers_ind(maxind); 
+
 xyzpoints = xyzpoints(ind,:); 
 end
 

@@ -8,9 +8,9 @@ function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globa
 %       camearParams: Object for storing camera parameters
 %           -> (nbr_pts_in_ptcloud x 3) Matrix: [x y z;...]
 %       globalData: Object containing actual and estimated viewSets and
-%       xyzPoints
 %
 %   output:
+%       viewId: viewID
 %       globalData: updated globalData
 %       currState: struct containing first state of camera
 %           currState.keypoints:
@@ -26,19 +26,6 @@ function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globa
 %           currState.pose_first_obs: pose of first observation above, denoted as T in pdf
 %               -> (nbr_ckp x 12) Matrix: [orientation(:)'loc(:)';...]
 
-% TODOs: 
-% -(maybe) use viewSet only for visualization. for Pose, landmarks storage
-% etc. use proposed state of project-pdf. (see state_first)
-% -based on correspondences between keypoints: triangulate to get landmarks
-% -properly save data of second bootstrap image,keyponts,landmarks etc. in
-% first instance of struct state_curr (here called state_first)
-% -update input and output infos in function header
-
-% NOTES:
-% establish keypoint correspondences between bootstrap images can be
-% done by either patch matching or KLT. Currently patch matching is
-% implemented.
-
 %% source code
 
 % get parameters
@@ -51,32 +38,41 @@ I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
 % Detect feature points
 switch bootstrap.det_method
     case 'harris'
-        points_0 = detectHarrisFeatures(I_0, 'MinQuality', harris.min_quality); %detect
-%        points_0 = selectUniform(points_0, harris.num_points, size(I_0));       %select uniformly
-        
-        points_1 = detectHarrisFeatures(I_1, 'MinQuality', harris.min_quality); %detect
-%        points_1 = selectUniform(points_1, harris.num_points, size(I_1));       %select uniformly
+        points_0 = detectHarrisFeatures(I_0, 'MinQuality', bootstrap.harris.min_quality); %detect        
+        points_1 = detectHarrisFeatures(I_1, 'MinQuality', bootstrap.harris.min_quality); %detect
         
     case 'fast'
-        points_0 = detectFASTFeatures(I_0, 'MinQuality', fast.min_quality);
-%        points_0 = selectUniform(points_0, fast.num_points, size(I_0));
-        
-        points_1 = detectFASTFeatures(I_1, 'MinQuality', fast.min_quality);
-%        points_1 = selectUniform(points_1, fast.num_points, size(I_1));
+        points_0 = detectFASTFeatures(I_0, 'MinQuality', bootstrap.fast.min_quality);        
+        points_1 = detectFASTFeatures(I_1, 'MinQuality', bootstrap.fast.min_quality);
         
     otherwise
         disp('given bootstrap.det_method not yet implemented')
 end
 
-%%%%%test selectKeypoints instead of selectUniform%%%%%%%%%%%
-points_0 = selectKeypoints(points_0);
+% Select features among all detected ones
+if bootstrap.select_by_nonMax
+    points_0 = selectKeypoints(points_0, bootstrap.select_keypoints.delta, bootstrap.select_keypoints.nbr_pts, bootstrap.select_keypoints.viaMatrix_method);
+else
+    switch bootstrap.det_method
+        case 'harris'
+            points_0 = selectUniform(points_0, bootstrap.harris.num_points, size(I_0));       %select uniformly
+            points_1 = selectUniform(points_1, bootstrap.harris.num_points, size(I_1));       %select uniformly
+
+        case 'fast'
+            points_0 = selectUniform(points_0, bootstrap.fast.num_points, size(I_0));
+            points_1 = selectUniform(points_1, bootstrap.fast.num_points, size(I_1));
+
+        otherwise
+            disp('given bootstrap.det_method not yet implemented')
+    end
+end
 
 % USE KLT
 if(bootstrap.use_KLT)  
-    KLT = vision.PointTracker('NumPyramidLevels', klt.NumPyramidLevels, ...
-                              'MaxBidirectionalError', klt.MaxBidirectionalError, ...
-                              'BlockSize', klt.BlockSize, ...
-                              'MaxIterations', klt.MaxIterations);
+    KLT = vision.PointTracker('NumPyramidLevels', bootstrap.klt.NumPyramidLevels, ...
+                              'MaxBidirectionalError', bootstrap.klt.MaxBidirectionalError, ...
+                              'BlockSize', bootstrap.klt.BlockSize, ...
+                              'MaxIterations', bootstrap.klt.MaxIterations);
     
     initialize(KLT, points_0.Location, I_0);
     [points_klt,kp_validity] = step(KLT,I_1);
@@ -91,7 +87,7 @@ if(bootstrap.use_KLT)
 
 % USE FEATURE MATCHING
 else  
-    points_1 = selectKeypoints(points_1);
+    points_1 = selectKeypoints(points_1,bootstrap.select_keypoints.delta, bootstrap.select_keypoints.nbr_pts, bootstrap.select_keypoints.viaMatrix_method);
     % Extract features at selected points
     switch bootstrap.desc_method
         case 'HOG'
@@ -105,7 +101,7 @@ else
     end
 
     % Match features between first and second image.
-    indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true, 'MaxRatio', match.max_ration ,'MatchThreshold', match.match_threshold);
+    indexPairs = matchFeatures(descriptors_0, descriptors_1, 'Unique', true, 'MaxRatio', bootstrap.match.max_ration ,'MatchThreshold', bootstrap.match.match_threshold);
 
     % estimate pose 
     matchedPoints_0 = points_0(indexPairs(:,1));
@@ -115,15 +111,15 @@ end
 fprintf('\nMatches found: %d\n', length(matchedPoints_0));
 
 % ESTIMATE FUNDAMENTAL MATRIX
-for i = 1:bootstrap.ransac_iter
+for i = 1:bootstrap.eFm.numTrials
     % this function uses RANSAC and the 8-point algorithm
     [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
-                 'Method','RANSAC', 'DistanceThreshold', ransac.distanceThreshold, ... 
-                 'Confidence',ransac.confidence, 'NumTrials', ransac.numTrials);
+                 'Method','RANSAC', 'DistanceThreshold', bootstrap.eFm.ransac.distanceThreshold, ... 
+                 'Confidence',bootstrap.eFm.ransac.confidence, 'NumTrials', bootstrap.eFm.ransac.numTrials);
              
     % Make sure we get enough inliers
     ratio = sum(inlierIdx) / numel(inlierIdx); 
-    if(ratio > 0.3)
+    if(ratio > bootstrap.eFm.ransac.inlierRatio)
         fprintf('Fraction of inliers: %.2f',ratio);
         break;
     end
@@ -148,7 +144,7 @@ inlierPoints_1 = matchedPoints_1(inlierIdx, :);
         relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 
-if(validPointFraction < 0.9) 
+if(validPointFraction < bootstrap.disambiguate.wanted_point_Fraction) 
     fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
 end
 
@@ -166,7 +162,7 @@ M2 = cameraParams.IntrinsicMatrix * [R, t];
 [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
 
 % filter
-[xyzPoints, ind_filt] = getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  triang.radius_threshold, triang.num_landmarks_bootstrap);
+[xyzPoints, ind_filt] = getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  bootstrap.triang.radius_threshold, bootstrap.triang.num_landmarks_bootstrap);
 inlierPoints_0 = inlierPoints_0(ind_filt);
 inlierPoints_1 = inlierPoints_1(ind_filt);
 
@@ -175,7 +171,7 @@ inlierPoints_1 = inlierPoints_1(ind_filt);
 % Get unmatched candidate keypoints in second frame wich are all
 % elements in points_1 not contained in indexPairs(:,2)
 
-candidate_kp_ind = not(isClose(points_klt,inlierPoints_1.Location,is_close.delta));
+candidate_kp_ind = not(isClose(points_klt,inlierPoints_1.Location,bootstrap.is_close.delta));
 % candidate_kp_ind = not(ismember(points_klt,inlierPoints_1.Location,'rows'));
 candidate_kp = points_klt(candidate_kp_ind,:);
 % candidate_kp_ind = setdiff(1:length(points_klt),indexPairs(:,2));
