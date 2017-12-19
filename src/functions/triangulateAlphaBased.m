@@ -115,8 +115,8 @@ if debug.print_new_landmarks
     fprintf('\nTriangulation, created new landmarks: %d',sum(success));
 end
 %delete used candidates
-currState.candidate_kp(ind_filt,:) = [];
-currState.first_obs(ind_filt,:) = [];
-currState.pose_first_obs(ind_filt,:) = [];
+currState.candidate_kp(success,:) = [];
+currState.first_obs(success,:) = [];
+currState.pose_first_obs(success,:) = [];
 
 end
