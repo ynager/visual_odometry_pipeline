@@ -31,14 +31,14 @@ switch(ds)
         
         % feature detection method
         bootstrap.det_method = 'harris'; % harris or fast, feature detection method        
-            bootstrap.harris.min_quality = 1e-6; % 0.001 init
+            bootstrap.harris.min_quality = 1e-7; % 0.001 init
             bootstrap.fast.min_quality = 0.01;
             
         % selectUniform / nonMaxSupression
         bootstrap.select_by_nonMax = true;
             % nonMaxSupression
-            bootstrap.select_keypoints.delta = 3; % online: 8
-            bootstrap.select_keypoints.nbr_pts = 600; %only for viaMatrix_method
+            bootstrap.select_keypoints.delta = 1; % online: 8
+            bootstrap.select_keypoints.nbr_pts = 800; %only for viaMatrix_method
             bootstrap.select_keypoints.viaMatrix_method = true; %true for matrix filling approach, false for keypoints_loc method
             % selectUniform
             bootstrap.harris.num_points = 500; % 10000 init
@@ -49,7 +49,7 @@ switch(ds)
             bootstrap.use_KLT = true;             
                 % KLT point Tracker
                 bootstrap.klt.NumPyramidLevels = 3; % online 5 % TODO: nbr was mentioned in lecture
-                bootstrap.klt.MaxBidirectionalError = 0.5; %5 % if inf, is not calculated
+                bootstrap.klt.MaxBidirectionalError = 2; %5 % if inf, is not calculated
                 bootstrap.klt.BlockSize = [31 31];
                 bootstrap.klt.MaxIterations = 1000;
             % FEATURE MATCHING method
@@ -69,10 +69,11 @@ switch(ds)
         
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
+        bootstrap.triang.min_distance_threshold = 2; 
         bootstrap.triang.num_landmarks_bootstrap = 600;
         
         % TODO: here params for candidate kp search in bootstrap
-        bootstrap.is_close.delta = 6;
+        bootstrap.is_close.delta = 1;
         
         %***********PROCESSFRAME***********
         
@@ -83,35 +84,38 @@ switch(ds)
         processFrame.klt.MaxIterations = bootstrap.klt.MaxIterations;
         
         % isClose fct
-        processFrame.is_close.delta = 6;
+        processFrame.is_close.delta = 0.5;
         
         % run p3p and ransac for 3D-2D localization
         processFrame.localization.numTrials = 3;
         
             % ransac inside of runP3PandRANSAC
-            processFrame.p3p_ransac.num_iteration = 2000;
-            processFrame.p3p_ransac.pixel_tolerance = 0.5;       % 2 init, better
+            processFrame.p3p_ransac.num_iteration = 500;
+            processFrame.p3p_ransac.pixel_tolerance = 2;       % 2 init, better
             processFrame.p3p_ransac.min_inlier = 8;
             
         %max allowed step in loc
         processFrame.p3p.max_delta_loc = 1;
 
         % triangulation
-        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(30)]; % 20 init
-        processFrame.triang.rep_e_threshold = 0.5; %init 3 % max allowed reprojection error in triangulation
-        processFrame.triang.radius_threshold = 60; % max allowable radius from cam
-        processFrame.triang.num_landmarks = 300;
+        processFrame.triang.alpha_threshold = [deg2rad(2.5), deg2rad(30)]; % 20 init
+        processFrame.triang.rep_e_threshold = 3; %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 80; % max allowable radius from cam
+        processFrame.triang.min_distance_threshold = 1; 
+        processFrame.triang.num_landmarks = 400;
 
         % detect new candidate kp
+        processFrame.max_candidate_keypoints = 3000;    %no new keypoints are added if above max 
         processFrame.det_method = bootstrap.det_method;
             % harris
-            processFrame.harris.min_quality_process = 1e-6;
+            processFrame.harris.min_quality_process = 3e-8;
+            processFrame.harris.filter_size = 7; %must be odd
 
         % selectUniform / NonMaxSupression
         processFrame.select_by_nonMax = true;
             % nonMaxSupression
-            processFrame.select_keypoints.delta = 3; % online: 8
-            processFrame.select_keypoints.nbr_pts = 600;
+            processFrame.select_keypoints.delta = 2; % online: 8
+            processFrame.select_keypoints.nbr_pts = 800;
             processFrame.select_keypoints.viaMatrix_method = true;%true for matrix filling approach, false for keypoints_loc method
                 %use sparse matrix, only useful if viaMatrix_method==true
                 processFrame.select_keypoints.sparseMatrix = true;

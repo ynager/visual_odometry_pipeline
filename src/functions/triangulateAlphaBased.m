@@ -87,7 +87,7 @@ end
 % landmark_radius
 fprintf('\nnumber of unfiltered landmarks: %d\n',length(unfiltered_landmarks));
 fprintf('sum success: %d\n',sum(success)); 
-[xyzPoints_filt, ind_filt] = getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.num_landmarks);    
+[xyzPoints_filt, ind_filt] = getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold, processFrame.triang.num_landmarks);    
 fprintf('number of filtered landmarks: %d\n',length(xyzPoints_filt));
 
 % save to current State and globalData
@@ -115,8 +115,8 @@ if debug.print_new_landmarks
     fprintf('\nTriangulation, created new landmarks: %d',sum(success));
 end
 %delete used candidates
-currState.candidate_kp(ind_filt,:) = [];
-currState.first_obs(ind_filt,:) = [];
-currState.pose_first_obs(ind_filt,:) = [];
+currState.candidate_kp(success,:) = [];
+currState.first_obs(success,:) = [];
+currState.pose_first_obs(success,:) = [];
 
 end

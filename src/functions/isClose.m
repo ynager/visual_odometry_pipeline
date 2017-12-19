@@ -15,7 +15,7 @@ for i=1:query_l
     for j=1:reference_l
         reference_curr = reference(j,:);
         
-        not_valid = norm(query_curr-reference_curr) < delta; 
+        not_valid = (query_curr(:,1)-reference_curr(:,1))^2 + (query_curr(:,2)-reference_curr(:,2))^2 < delta^2; 
         
         if not_valid
             isclose(i)=1;
