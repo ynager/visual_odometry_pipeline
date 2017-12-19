@@ -28,17 +28,16 @@ set(h, 'XData', globalData.landmarks(:,1), 'YData', ...
 h = plotHandles.axes1.Children(1);
 set(h, 'XData', currState.landmarks(:,1), 'YData', ...
     currState.landmarks(:,2), 'ZData', currState.landmarks(:,3));
- 
 
 % set axis limits 5 meters larger than data
 limsx=get(plotHandles.axes1,'XLim');
-set(plotHandles.axes1,'Xlim',[limsx(1), limsx(2)]); 
+set(plotHandles.axes1,'Xlim',[min(globalData.landmarks(:,1))-1, max(globalData.landmarks(:,1))+1]); 
 
 limsy=get(plotHandles.axes1,'YLim');
-set(plotHandles.axes1,'Ylim',[limsy(1), limsy(2)]); 
+set(plotHandles.axes1,'Ylim',[min(globalData.landmarks(:,2))-1, max(globalData.landmarks(:,2))+1]); 
 
 limsz=get(plotHandles.axes1,'ZLim');
-set(plotHandles.axes1,'Zlim',[limsz(1), limsz(2)]); 
+set(plotHandles.axes1,'Zlim',[min(globalData.landmarks(:,3))-15, max(globalData.landmarks(:,3))+1]); 
 
 axes(plotHandles.axes2);   
 imshow(I); 
