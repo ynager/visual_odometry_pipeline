@@ -129,47 +129,51 @@ currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 % check if alpha of landmarks is above threshold -> triangulate for those
 [currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
 
-% detect new candidates 
-switch processFrame.det_method
-    case 'harris'
-        new_kp = detectHarrisFeatures(I_curr, 'MinQuality', processFrame.harris.min_quality_process);
-%         if harris.selectUniform
-%             new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));       %select uniformly
-%             if debug.print_det_method
-%                 fprintf('\nNew features found: %d',size(new_kp,1));
-%             end
-%         end
-    otherwise
-        warning('given processFrame.det_method not yet implemented in processFrame')
+
+% Look for and add new candidate keypoints
+if(length(currState.candidate_kp) < processFrame.max_candidate_keypoints)
+    % detect new candidates 
+    switch processFrame.det_method
+        case 'harris'
+            new_kp = detectHarrisFeatures(I_curr, 'MinQuality', processFrame.harris.min_quality_process, 'FilterSize', processFrame.harris.filter_size);
+    %         if harris.selectUniform
+    %             new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));       %select uniformly
+    %             if debug.print_det_method
+    %                 fprintf('\nNew features found: %d',size(new_kp,1));
+    %             end
+    %         end
+        otherwise
+            warning('given processFrame.det_method not yet implemented in processFrame')
+    end
+
+    %%%%%%%%%test: first isClose, then selectUniform%%%%%%%%%%%%
+    new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.select_keypoints.delta));
+    new_kp = new_kp(new_kp_valid);
+    if processFrame.select_by_nonMax
+        new_kp = selectKeypoints(new_kp, processFrame.select_keypoints.delta, processFrame.select_keypoints.nbr_pts, processFrame.select_keypoints.viaMatrix_method);
+    else
+        new_kp = selectUniform(new_kp, processFrame.harris.num_points, size(I_curr));
+    end
+
+    if debug.print_new_features
+        fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
+    end
+    % check for redundancy and add new candidates to state and current pose to
+    % first obs
+    % new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.is_close.delta));
+    %%%%%%%%%%%%%%%%%%%%%%%%
+
+    % new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));
+    currState.candidate_kp = [currState.candidate_kp; new_kp.Location];
+    % currState.candidate_kp = [currState.candidate_kp; new_kp.Location(new_kp_valid,:)];
+    currState.first_obs = [currState.first_obs; new_kp.Location];
+    % currState.first_obs = [currState.first_obs; new_kp.Location(new_kp_valid,:)];
+    currState.pose_first_obs = [currState.pose_first_obs;...
+        repmat([orient(:)', loc(:)'], [length(new_kp.Location),1])];
+    % currState.pose_first_obs = [currState.pose_first_obs;...
+    %     repmat([orient(:)', loc(:)'], [length(new_kp.Location(new_kp_valid,:)),1])];
+
 end
-
-%%%%%%%%%test: first isClose, then selectUniform%%%%%%%%%%%%
-new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.select_keypoints.delta));
-new_kp = new_kp(new_kp_valid);
-if processFrame.select_by_nonMax
-    new_kp = selectKeypoints(new_kp, processFrame.select_keypoints.delta, processFrame.select_keypoints.nbr_pts, processFrame.select_keypoints.viaMatrix_method);
-else
-    new_kp = selectUniform(new_kp, processFrame.harris.num_points, size(I_curr));
-end
-
-if debug.print_new_features
-    fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
-end
-% check for redundancy and add new candidates to state and current pose to
-% first obs
-% new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.is_close.delta));
-%%%%%%%%%%%%%%%%%%%%%%%%
-
-% new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));
-currState.candidate_kp = [currState.candidate_kp; new_kp.Location];
-% currState.candidate_kp = [currState.candidate_kp; new_kp.Location(new_kp_valid,:)];
-currState.first_obs = [currState.first_obs; new_kp.Location];
-% currState.first_obs = [currState.first_obs; new_kp.Location(new_kp_valid,:)];
-currState.pose_first_obs = [currState.pose_first_obs;...
-    repmat([orient(:)', loc(:)'], [length(new_kp.Location),1])];
-% currState.pose_first_obs = [currState.pose_first_obs;...
-%     repmat([orient(:)', loc(:)'], [length(new_kp.Location(new_kp_valid,:)),1])];
-
 % finally update KLT_keypointsTracker and KLT_candidateKeypointsTracker
 setPoints(KLT_keypointsTracker,currState.keypoints);
 setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);
