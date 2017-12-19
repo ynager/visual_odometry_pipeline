@@ -5,7 +5,7 @@ close all;
 %Setup Figure
 %************************************************************************
 figure();
-set(gcf,'units','points','position',[300,300,800,400],'color','w');
+set(gcf,'units','points','position',[300,100,800,400],'color','w');
 
 
 %Setup PointCloud Axes
