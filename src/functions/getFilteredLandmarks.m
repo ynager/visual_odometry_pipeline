@@ -16,10 +16,10 @@ outliers = any([(c_points(:,3) < min_distance_threshold)'; ...
 inliers_ind = find(~outliers);
 
 %get k elements with lowest reprError that do fulfil above condition
-[~,maxind] = maxk(reprError(~outliers), num_landmarks,1);
+[~,minind] = mink(reprError(~outliers), num_landmarks,1);
 
 %get final filtered indices and landmarks
-ind = inliers_ind(maxind); 
+ind = inliers_ind(minind); 
 
 xyzpoints = xyzpoints(ind,:); 
 end
