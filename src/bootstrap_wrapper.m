@@ -162,7 +162,9 @@ M2 = cameraParams.IntrinsicMatrix * [R, t];
 [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
 
 % filter
-[xyzPoints, ind_filt] = getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.num_landmarks_bootstrap);
+[xyzPoints, ind_filt] =  ...
+    getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
+
 inlierPoints_0 = inlierPoints_0(ind_filt);
 inlierPoints_1 = inlierPoints_1(ind_filt);
 

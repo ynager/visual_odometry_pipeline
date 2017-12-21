@@ -7,6 +7,11 @@ function [ currState, globalData ] = triangulateAlphaBased( currState, cameraPar
 % get parameters
 run('parameters.m');
 
+% check if current number of landmarks is larger than goal number
+if(length(currState.landmarks) > 0.8*processFrame.triang.num_landmarks_goal)
+    return; 
+end
+
 % calc constant R and T for current pose
 R2 = currRT(:,1:3);
 T2 = currRT(:,4);
@@ -20,17 +25,15 @@ bearings_curr_W = R2*bearings_curr';
 %loop through first oberservations and calc bearing and check alpha
 bearings_prev = getBearingVector( currState.first_obs, cameraParams.IntrinsicMatrix );
 
-%used for deleting candidates later
-success = logical(zeros(size(currState.pose_first_obs,1),1));
-
 if debug.print_triangulation
     book_alpha = zeros(size(currState.pose_first_obs,1),1);
     book_alpha_high = zeros(size(currState.pose_first_obs,1),1);
     book_rep_e = zeros(size(currState.pose_first_obs,1),1);
 end
 
-reprojection_errors = zeros(size(currState.pose_first_obs,1),1);
+reprojection_errors = 1000*ones(size(currState.pose_first_obs,1),1);
 unfiltered_landmarks = zeros(size(currState.pose_first_obs,1),3);
+alpha_ok = logical(zeros(size(currState.pose_first_obs,1),1));
 
 for i = 1:size(currState.pose_first_obs,1)
     
@@ -42,8 +45,7 @@ for i = 1:size(currState.pose_first_obs,1)
     
     bearings_prev_W = R1*bear'; %attention change of convention of axes here
     
-    %TODO: test if angle is always small or vectors potentially can swap
-    %test alpha
+    % get bearing angle
     alpha = atan2(norm(cross(bearings_prev_W,bearings_curr_W(:,i))),dot(bearings_prev_W,bearings_curr_W(:,i)));
     
     if debug.print_triangulation
@@ -53,6 +55,8 @@ for i = 1:size(currState.pose_first_obs,1)
     %if alpha above threshold, do triangulation
     if alpha > processFrame.triang.alpha_threshold(1) && alpha < processFrame.triang.alpha_threshold(2)
         
+        alpha_ok(i) = true; 
+        
         % get M
         M1 = cameraParams.IntrinsicMatrix * [R1, -T1]; 
         
@@ -60,40 +64,47 @@ for i = 1:size(currState.pose_first_obs,1)
         % triangulate
         [xyzPoints, reprojectionErrors] = triangulate(currState.first_obs(i,:),currState.candidate_kp(i,:), M1', M2');
         
-        if reprojectionErrors > processFrame.triang.rep_e_threshold %skip this triangulation if reprojection error too high
-            
-        	continue 
-        end
-        
         % Fill in unfiltered values of every triangulated point 
         unfiltered_landmarks(i,:) = xyzPoints; 
-        reprojection_errors(i) = reprojectionErrors; 
+        reprojection_errors(i) = reprojectionErrors;
         
         if debug.print_triangulation
             book_rep_e(i) = reprojectionErrors;
             book_alpha_high(i) = alpha;
         end
-        
-        % save to current State and globalData
-        %currState.keypoints = [currState.keypoints; currState.candidate_kp(i,:)];
-        %currState.landmarks = [currState.landmarks; xyzPoints];
-        %globalData.landmarks = [globalData.landmarks; xyzPoints];
-        
-        success(i)=true;
+             
     end
 end
 
+% calculate how many new landmarks should be generated
+offset = 0.2*processFrame.triang.num_landmarks_goal; 
+num_new_landmarks = ceil(offset + (processFrame.triang.num_landmarks_goal - length(currState.keypoints)));
+
 % filter landmarks to get only the best num_landmarks inside
-% landmark_radius
-fprintf('\nnumber of unfiltered landmarks: %d\n',length(unfiltered_landmarks));
-fprintf('sum success: %d\n',sum(success)); 
-[xyzPoints_filt, ind_filt] = getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold, processFrame.triang.num_landmarks);    
-fprintf('number of filtered landmarks: %d\n',length(xyzPoints_filt));
+unfiltered_landmarks = unfiltered_landmarks(alpha_ok,:); 
+reprojection_errors = reprojection_errors(alpha_ok); 
+
+[xyzPoints_filt, ind_filt, ind_invalid] = ... 
+    getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, 100);    
+
+% get indices relative to total array back
+ind_alpha_ok = find(alpha_ok);
+ind_global_filt = ind_alpha_ok(ind_filt); 
 
 % save to current State and globalData
-currState.keypoints = [currState.keypoints; currState.candidate_kp(ind_filt,:)]; 
+currState.keypoints = [currState.keypoints; currState.candidate_kp(ind_global_filt,:)]; 
 currState.landmarks = [currState.landmarks; xyzPoints_filt]; 
 globalData.landmarks = [globalData.landmarks; xyzPoints_filt]; 
+
+%calculate indices to be removed
+ind_global_delete = ind_alpha_ok(union(ind_filt, ind_invalid)); 
+
+%delete used candidates
+currState.candidate_kp(ind_global_delete,:) = [];
+currState.first_obs(ind_global_delete,:) = [];
+currState.pose_first_obs(ind_global_delete,:) = [];
+
+
 
 if debug.print_triangulation
     fprintf('\nTriangulation, mean alpha high: %.2f',rad2deg(mean(book_alpha_high(success))));
@@ -114,9 +125,5 @@ end
 if debug.print_new_landmarks
     fprintf('\nTriangulation, created new landmarks: %d',sum(success));
 end
-%delete used candidates
-currState.candidate_kp(success,:) = [];
-currState.first_obs(success,:) = [];
-currState.pose_first_obs(success,:) = [];
 
 end

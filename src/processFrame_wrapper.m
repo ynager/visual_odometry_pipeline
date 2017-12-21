@@ -123,13 +123,9 @@ currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
 
-% TODO: maybe add check if nbr kp are below thershold, if yes run triangulation
-% with candidate_kp, dont forget to set lvl to new value
+% triangulate new landmarks
+[currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
 
-% triangulate new landmarks if number below threshold
-if(length(currState.landmarks) < processFrame.triang.landmark_threshold)
-    [currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
-end
 
 % Look for and add new candidate keypoints if number of candidates below
 % threshold

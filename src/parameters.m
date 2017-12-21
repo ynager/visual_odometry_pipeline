@@ -4,11 +4,11 @@
 ds = 2;
 
 %********* debugging printouts *********
-debug.print_tracking = true;                                                %for Tracking in processFrame
-debug.print_p3p = true;                                                     %for p3p in processFrame (inlier and delta_loc)
-debug.print_triangulation = true;                                           % for alpha value based triangulation in processFrame
-debug.print_new_landmarks = true;                                           % for nbr of new landmarks in triangulation
-debug.print_new_features = true;                                            % for detection of new keypoints
+debug.print_tracking = false;                                                %for Tracking in processFrame
+debug.print_p3p = false;                                                     %for p3p in processFrame (inlier and delta_loc)
+debug.print_triangulation = false;                                           % for alpha value based triangulation in processFrame
+debug.print_new_landmarks = false;                                           % for nbr of new landmarks in triangulation
+debug.print_new_features = false;                                            % for detection of new keypoints
 
 % interruption after each frame
 debug.keyboard_interrupt = false; 
@@ -49,7 +49,7 @@ switch(ds)
             
         % KLT method             
         bootstrap.klt.NumPyramidLevels = 5;                                 % online 5 % TODO: nbr was mentioned in lecture
-        bootstrap.klt.MaxBidirectionalError = 0.3;                          %5 % if inf, is not calculated
+        bootstrap.klt.MaxBidirectionalError = 1;                          %5 % if inf, is not calculated
         bootstrap.klt.BlockSize = [31 31];
         bootstrap.klt.MaxIterations = 2000;
                 
@@ -72,6 +72,7 @@ switch(ds)
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 
         bootstrap.triang.num_landmarks_bootstrap = 600;
+        bootstrap.triang.rep_e_threshold = 1; 
         
         % TODO: here params for candidate kp search in bootstrap
         bootstrap.is_close.delta = 1;
@@ -97,15 +98,16 @@ switch(ds)
         processFrame.p3p.max_delta_loc = 1;                                 % max allowed step in loc
 
         % triangulation
-        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];  % 20 init
+        processFrame.triang.alpha_threshold = [deg2rad(2), deg2rad(40)];    % 20 init
         processFrame.triang.rep_e_threshold = 1;                            %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 60;                          % max allowable radius from cam
         processFrame.triang.min_distance_threshold = 1; 
-        processFrame.triang.num_landmarks = 70;                            % number of landmarks that are triangulated
-        processFrame.triang.landmark_threshold = 150;                       % landmarks are triangulated if num landmarks below this value
-
+        processFrame.triang.num_landmarks = 0;                            % number of landmarks that are triangulated
+        processFrame.triang.landmark_threshold = 0;                       % landmarks are triangulated if num landmarks below this value
+        processFrame.triang.num_landmarks_goal = 300;
+        
         % detect new candidate kp
-        processFrame.max_candidate_keypoints = 1000;                        %no new keypoints are added if above max 
+        processFrame.max_candidate_keypoints = 3000;                        %no new keypoints are added if above max 
         processFrame.det_method = bootstrap.det_method;
             
         % harris
@@ -116,7 +118,7 @@ switch(ds)
         processFrame.select_by_nonMax = true;
         
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 3;                            % online: 8
+        processFrame.select_keypoints.delta = 1;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 400;
         processFrame.select_keypoints.viaMatrix_method = true;              %true for matrix filling approach, false for keypoints_loc method    
         processFrame.select_keypoints.sparseMatrix = true;                  %use sparse matrix, only useful if viaMatrix_method==true

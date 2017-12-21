@@ -8,7 +8,7 @@ run('parameters.m');
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
     kitti_path = '../datasets/kitti';
-    assert(exist('../datasets/kitti', 'dir') ~= 0, 'Kitti dataset not found');
+    assert(exist('../datasets/kitti', 'dir') ~= 0, 'Kitti dataset notii found');
     ground_truth = load([kitti_path '/poses/00.txt']);
     ground_truth = ground_truth(:, [end-8 end]);
     last_frame = 4540;
