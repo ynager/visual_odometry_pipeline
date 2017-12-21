@@ -20,9 +20,6 @@ ind_valid = find(~invalid);
 
 %get k elements with lowest reprError that do fulfil above condition
 [~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
-meana = mean(reprError(:)); 
-meanv = mean(reprError(min_error_ind));
-disp(meana); 
 
 %get final filtered indices and landmarks
 ind_filt = ind_valid(min_error_ind); 

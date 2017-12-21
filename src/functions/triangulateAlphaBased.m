@@ -7,8 +7,9 @@ function [ currState, globalData ] = triangulateAlphaBased( currState, cameraPar
 % get parameters
 run('parameters.m');
 
-% check if current number of landmarks is larger than goal number
-if(length(currState.landmarks) > 0.8*processFrame.triang.num_landmarks_goal)
+% check if current number of landmarks is larger than goal number * margin
+margin = processFrame.triang.num_landmarks_margin; 
+if(length(currState.landmarks) > margin*processFrame.triang.num_landmarks_goal)
     return; 
 end
 
@@ -77,7 +78,7 @@ for i = 1:size(currState.pose_first_obs,1)
 end
 
 % calculate how many new landmarks should be generated
-offset = 0.2*processFrame.triang.num_landmarks_goal; 
+offset = processFrame.triang.excess_num_landmarks; 
 num_new_landmarks = ceil(offset + (processFrame.triang.num_landmarks_goal - length(currState.keypoints)));
 
 % filter landmarks to get only the best num_landmarks inside
@@ -85,7 +86,7 @@ unfiltered_landmarks = unfiltered_landmarks(alpha_ok,:);
 reprojection_errors = reprojection_errors(alpha_ok); 
 
 [xyzPoints_filt, ind_filt, ind_invalid] = ... 
-    getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, 100);    
+    getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, num_new_landmarks);    
 
 % get indices relative to total array back
 ind_alpha_ok = find(alpha_ok);
@@ -107,23 +108,23 @@ currState.pose_first_obs(ind_global_delete,:) = [];
 
 
 if debug.print_triangulation
-    fprintf('\nTriangulation, mean alpha high: %.2f',rad2deg(mean(book_alpha_high(success))));
-    fprintf('\nTriangulation, min alpha high: %.2f',rad2deg(min(book_alpha_high(success))));
-    fprintf('\nTriangulation, max alpha high: %.2f',rad2deg(max(book_alpha_high(success))));
+    fprintf('\nTriangulation, mean alpha high: %.2f',rad2deg(mean(book_alpha_high(ind_global_filt))));
+    fprintf('\nTriangulation, min alpha high: %.2f',rad2deg(min(book_alpha_high(ind_global_filt))));
+    fprintf('\nTriangulation, max alpha high: %.2f',rad2deg(max(book_alpha_high(ind_global_filt))));
     
     fprintf('\nTriangulation, mean alpha: %.2f',rad2deg(mean(book_alpha)));
     fprintf('\nTriangulation, min alpha: %.2f',rad2deg(min(book_alpha)));
     fprintf('\nTriangulation, max alpha: %.2f',rad2deg(max(book_alpha)));
     
-    fprintf('\nTriangulation, mean reprojE: %.2f',mean(book_rep_e(success)));
-    fprintf('\nTriangulation, min reprojE: %.2f',min(book_rep_e(success)));
-    fprintf('\nTriangulation, max reprojE: %.2f',max(book_rep_e(success))); 
+    fprintf('\nTriangulation, mean reprojE: %.2f',mean(book_rep_e(ind_global_filt)));
+    fprintf('\nTriangulation, min reprojE: %.2f',min(book_rep_e(ind_global_filt)));
+    fprintf('\nTriangulation, max reprojE: %.2f',max(book_rep_e(ind_global_filt))); 
 %     figure(3)
 %     histogram(book_rep_e(success),'BinWidth',0.5)
 end
 
 if debug.print_new_landmarks
-    fprintf('\nTriangulation, created new landmarks: %d',sum(success));
+    fprintf('\nTriangulation, created new landmarks: %d',length(ind_filt));
 end
 
 end
