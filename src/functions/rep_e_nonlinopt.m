@@ -26,7 +26,7 @@ projected_points = projectLandmarksToSensor(...
 
 %ger reproj error
 difference = keypoints' - projected_points;
-rep_e = sum(difference.^2, 1)';
+rep_e = sqrt(sum(difference.^2, 1)');
 
 
 
