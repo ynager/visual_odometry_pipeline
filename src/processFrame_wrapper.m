@@ -1,7 +1,7 @@
-function [currState, currRT, globalData] = processFrame_wrapper(I_curr, ...
-                                                prevState, KLT_keypointsTracker, ...
-                                                KLT_candidateKeypointsTracker, ...
-                                                cameraParams, globalData)
+function [currState, currRT, globalData, debugData] = processFrame_wrapper(I_curr, ...
+                                                      prevState, KLT_keypointsTracker, ...
+                                                      KLT_candidateKeypointsTracker, ...
+                                                      cameraParams, globalData)
 %PROCESSFRAME_WRAPPER After bootstrap: Estimating remaining camera trajectory
 %1. Associate keypoints in the current frame to previously triangulated landmarks.
 %2. Based on this, estimate the current camera pose.
@@ -138,9 +138,6 @@ currState.keypoints = kp_for_p3p(inlierIdx,:);
 currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
 
-% TODO: maybe add check if nbr kp are below thershold, if yes run triangulation
-% with candidate_kp, dont forget to set lvl to new value
-
 % triangulate new landmarks if number below threshold
 if(length(currState.landmarks) < processFrame.triang.landmark_threshold)
     [currState,globalData] = triangulateAlphaBased(currState, cameraParams, optRT, globalData);
@@ -197,6 +194,13 @@ setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);
 
 % printout
 fprintf('\nEnd of step. Numbers of keypoints: %d',length(currState.keypoints));
+
+
+%% Fill up debut plotting data
+% get p3p outlier keypoints and landmarks
+debugData.p3p_outlier_keypoints = kp_for_p3p(~inlierIdx,:); 
+debugData.p3p_outlier_landmarks = landmarks_for_p3p(~inlierIdx,:); 
+
 
 end
 
