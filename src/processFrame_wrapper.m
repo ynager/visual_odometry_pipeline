@@ -196,8 +196,8 @@ fprintf('\nEnd of step. Numbers of keypoints: %d',length(currState.keypoints));
 
 %% Fill up debut plotting data
 % get p3p outlier keypoints and landmarks
-debugData.p3p_outlier_keypoints = kp_for_p3p(~inlierIdx,:); 
-debugData.p3p_outlier_landmarks = landmarks_for_p3p(~inlierIdx,:); 
+globalData.debug.p3p_outlier_keypoints = kp_for_p3p(~inlierIdx,:); 
+globalData.debug.p3p_outlier_landmarks = landmarks_for_p3p(~inlierIdx,:); 
 
 
 end

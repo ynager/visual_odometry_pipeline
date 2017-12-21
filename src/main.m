@@ -50,6 +50,11 @@ end
 globalData.vSet = viewSet;              % viewSet with estimated data
 globalData.actualVSet = viewSet;        % viewSet with ground truth
 globalData.landmarks = [];              % 3D pointcloud (Nx3 matrix)
+globalData.debug = []; 
+
+%create debug data
+globalData.debug.p3p_outlier_keypoints = []; 
+globalData.debug.ckeypoints_invalid = []; 
 
 
 %put ground truth info into a realVSet
@@ -85,11 +90,10 @@ end
 
 %% Setup Camera/Trajectory plot
 plotHandles = setupCamTrajectoryPlot(globalData); 
-debugData = []; 
 
 % update Camera/Trajectory plot
 I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
-updateCamTrajectoryPlot(viewId, globalData, currState, debugData, I_1, plotHandles); 
+updateCamTrajectoryPlot(viewId, globalData, currState, I_1, plotHandles, plotParams); 
 
 %% Continuous operation
 
@@ -124,10 +128,10 @@ for i = range
     I_curr = loadImage(ds,i, cameraParameters);
     
     % get current state (containing all state info) and current pose
-    [currState, currRT, globalData, debugData] = processFrame_wrapper(I_curr, prevState, ...
-                                                    KLT_keypointsTracker, ...
-                                                    KLT_candidateKeypointsTracker, ...
-                                                    cameraParams, globalData);
+    [currState, currRT, globalData] = processFrame_wrapper(I_curr, prevState, ...
+                                        KLT_keypointsTracker, ...
+                                        KLT_candidateKeypointsTracker, ...
+                                        cameraParams, globalData);
   
                                                
     viewId = i - bootstrap.images(2) + 2; 
@@ -136,7 +140,7 @@ for i = range
     % Apply scale factor
     % globalData = applyScaleFactor(globalData);
     
-    updateCamTrajectoryPlot(viewId, globalData, currState, debugData, I_curr, plotHandles); 
+    updateCamTrajectoryPlot(viewId, globalData, currState, I_curr, plotHandles, plotParams); 
         
     if debug.keyboard_interrupt
         keyboard

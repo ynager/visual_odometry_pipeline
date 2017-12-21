@@ -1,5 +1,5 @@
-function updateCamTrajectoryPlot(viewId, globalData, currState, debugData, I, plotHandles)
-warning off; 
+function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles, plotParams)
+warning off;  
 
 % Move the estimated camera in the plot
 h = plotHandles.axes1.Children(5);
@@ -49,23 +49,15 @@ hold on;
 scatter(currState.candidate_kp(:,1), currState.candidate_kp(:,2), 5, 'blue', 'filled', 'Marker', 'o'); 
 scatter(currState.keypoints(:,1), currState.keypoints(:,2), 5, 'green', 'Marker', '+'); 
 
-if not(isempty(debugData))
-    axes(plotHandles.axes2); 
-    scatter(debugData.p3p_outlier_keypoints(:,1), debugData.p3p_outlier_keypoints(:,2), 5, 'red', 'Marker', 'x');
+%plot debug data
+if ~isempty(globalData.debug.p3p_outlier_keypoints) && plotParams.plot_p3p_outliers
+    scatter(globalData.debug.p3p_outlier_keypoints(:,1), globalData.debug.p3p_outlier_keypoints(:,2), 5, 'red', 'Marker', 'x');
 end
-
+if ~isempty(globalData.debug.ckeypoints_invalid) && plotParams.plot_invalid_ckeypoints
+    scatter(globalData.debug.ckeypoints_invalid(:,1), globalData.debug.ckeypoints_invalid(:,2), 5, 'magenta', 'Marker', 'o');
+end
 hold off; 
 
-%draw displacement vectors
-%for i = 1:num_inliers
-%    x_from = globalData.vSet.Views.Points{viewId-1}(i,1); 
-%    x_to = globalData.vSet.Views.Points{viewId}(i,1);
-%    y_from = globalData.vSet.Views.Points{viewId-1}(i,2);
-%    y_to = globalData.vSet.Views.Points{viewId}(i,2);
-    
-%    plot([x_from; x_to], [y_from; y_to], 'r-', 'Linewidth', 0.2);
-%    hold on; 
-%end
 
-
+end
 

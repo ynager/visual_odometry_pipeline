@@ -91,6 +91,7 @@ reprojection_errors = reprojection_errors(alpha_ok);
 % get indices relative to total array back
 ind_alpha_ok = find(alpha_ok);
 ind_global_filt = ind_alpha_ok(ind_filt); 
+ind_global_invalid = ind_alpha_ok(ind_invalid); 
 
 % save to current State and globalData
 currState.keypoints = [currState.keypoints; currState.candidate_kp(ind_global_filt,:)]; 
@@ -98,7 +99,10 @@ currState.landmarks = [currState.landmarks; xyzPoints_filt];
 globalData.landmarks = [globalData.landmarks; xyzPoints_filt]; 
 
 %calculate indices to be removed
-ind_global_delete = ind_alpha_ok(union(ind_filt, ind_invalid)); 
+ind_global_delete = union(ind_global_invalid, ind_global_filt); 
+
+% Add debug data
+globalData.debug.ckeypoints_invalid = currState.candidate_kp(ind_global_invalid,:);
 
 %delete used candidates
 currState.candidate_kp(ind_global_delete,:) = [];

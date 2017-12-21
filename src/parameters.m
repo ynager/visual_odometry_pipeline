@@ -10,6 +10,10 @@ debug.print_triangulation = true;                                           % fo
 debug.print_new_landmarks = true;                                           % for nbr of new landmarks in triangulation
 debug.print_new_features = true;                                            % for detection of new keypoints
 
+%********* plot parameters ************
+plotParams.plot_p3p_outliers = true; 
+plotParams.plot_invalid_ckeypoints = true; 
+
 % interruption after each frame
 debug.keyboard_interrupt = false; 
 
