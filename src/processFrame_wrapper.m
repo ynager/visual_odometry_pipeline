@@ -114,6 +114,21 @@ if debug.print_p3p
     fprintf('\nFraction of inliers(p3p) of tracked kp: %.2f',sum(inlierIdx)/length(kp_validity));
 end
 
+%non-linear optimization of R and T
+% represent R and T as twist vector to be useful in lsqnonlin
+currRT_twist = HomogMatrix2twist([currRT;[0 0 0 1]]);
+% use lonlinear optimization (least squares) to minimize reprojection error
+%initialise for lsqnonlin
+f=@(RT_twist)rep_e_nonlinopt(RT_twist,double(kp_for_p3p(inlierIdx,:)), double(landmarks_for_p3p(inlierIdx,:)), cameraParams);
+%set options for lsqnonlin
+options = optimoptions(@lsqnonlin,'Display','iter','FunValCheck','on','MaxIter',400);
+% lowerbount = closetocurrRT;
+% upperbound = closetocurrRT;
+[optRT_twist,squarederrornorm,errors,exitflag] = lsqnonlin(f,currRT_twist,[],[],options);
+% twist to optRT
+optRT_homo = twist2HomogMatrix(optRT_twist);
+optRT = optRT_homo(1:3,1:4);
+
 % prepare orient and loc for return
 % TODO: check if orient and loc are empty, in that case skip the step
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
@@ -128,7 +143,7 @@ currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 
 % triangulate new landmarks if number below threshold
 if(length(currState.landmarks) < processFrame.triang.landmark_threshold)
-    [currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
+    [currState,globalData] = triangulateAlphaBased(currState, cameraParams, optRT, globalData);
 end
 
 % Look for and add new candidate keypoints if number of candidates below

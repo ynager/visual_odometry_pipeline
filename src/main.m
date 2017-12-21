@@ -4,6 +4,13 @@ clear all;
 close all;
 run('parameters.m');
 
+%add path
+addpath('../src')
+addpath('../datasets')
+addpath('plot')
+addpath('functions')
+addpath('functions/NonLinLS')
+
 %get ground truth, K, and last frame index from database
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
