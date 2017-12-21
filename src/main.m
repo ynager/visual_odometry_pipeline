@@ -4,6 +4,13 @@ clear all;
 close all;
 run('parameters.m');
 
+%add path
+addpath('../src')
+addpath('../datasets')
+addpath('plot')
+addpath('functions')
+addpath('functions/NonLinLS')
+
 %get ground truth, K, and last frame index from database
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
@@ -78,10 +85,11 @@ end
 
 %% Setup Camera/Trajectory plot
 plotHandles = setupCamTrajectoryPlot(globalData); 
+debugData = []; 
 
 % update Camera/Trajectory plot
 I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
-updateCamTrajectoryPlot(viewId, globalData, currState, I_1, plotHandles); 
+updateCamTrajectoryPlot(viewId, globalData, currState, debugData, I_1, plotHandles); 
 
 %% Continuous operation
 
@@ -116,21 +124,19 @@ for i = range
     I_curr = loadImage(ds,i, cameraParameters);
     
     % get current state (containing all state info) and current pose
-    [currState, currRT, globalData] = processFrame_wrapper(I_curr, prevState, ...
-                                                   KLT_keypointsTracker, ...
-                                                   KLT_candidateKeypointsTracker, ...
-                                                   cameraParams, globalData);
+    [currState, currRT, globalData, debugData] = processFrame_wrapper(I_curr, prevState, ...
+                                                    KLT_keypointsTracker, ...
+                                                    KLT_candidateKeypointsTracker, ...
+                                                    cameraParams, globalData);
   
                                                
-    % TODO: update globaldata.viewSet with pose and i
     viewId = i - bootstrap.images(2) + 2; 
     globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4)', 'Points', currState.keypoints);
 
     % Apply scale factor
     % globalData = applyScaleFactor(globalData);
     
-    updateCamTrajectoryPlot(viewId, globalData, currState, I_curr, plotHandles); 
-    fprintf('\nnum landmarks: %d\n', length(globalData.landmarks));
+    updateCamTrajectoryPlot(viewId, globalData, currState, debugData, I_curr, plotHandles); 
         
     if debug.keyboard_interrupt
         keyboard

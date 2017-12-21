@@ -1,4 +1,4 @@
-function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles)
+function updateCamTrajectoryPlot(viewId, globalData, currState, debugData, I, plotHandles)
 warning off; 
 
 % Move the estimated camera in the plot
@@ -47,7 +47,13 @@ hold on;
 
 %draw points
 scatter(currState.candidate_kp(:,1), currState.candidate_kp(:,2), 5, 'blue', 'filled', 'Marker', 'o'); 
-scatter(currState.keypoints(:,1), currState.keypoints(:,2), 5, 'green', 'filled', 'Marker', 'o'); 
+scatter(currState.keypoints(:,1), currState.keypoints(:,2), 5, 'green', 'Marker', '+'); 
+
+if not(isempty(debugData))
+    axes(plotHandles.axes2); 
+    scatter(debugData.p3p_outlier_keypoints(:,1), debugData.p3p_outlier_keypoints(:,2), 5, 'red', 'Marker', 'x');
+end
+
 hold off; 
 
 %draw displacement vectors
