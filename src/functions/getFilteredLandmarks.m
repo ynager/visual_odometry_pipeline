@@ -4,7 +4,10 @@ function [xyzpoints, ind] = getFilteredLandmarks(xyzpoints, reprError, R, T, max
 % not lie behind the camera
 
 %translate and rotate points into camera frame
-c_points = (xyzpoints - T')*R'; 
+% c_points = (xyzpoints - T')*R';
+% alternative:
+c_points = (R'*(xyzpoints - T')')';
+
 
 %find points outside of max_radius and behind camera
 outliers = any([(c_points(:,3) < min_distance_threshold)'; ... 
