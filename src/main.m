@@ -65,8 +65,7 @@ for i = 1:bootstrap.init.numTrials
     % run bootstrap: Estimating the pose of the second view relative to the first view
     [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
-    if and(globalData.vSet.Views.Location{end}(1)' > bootstrap.init.x_interval(1),...
-            globalData.vSet.Views.Location{end}(1)' < bootstrap.init.x_interval(2))
+    if norm(globalData.vSet.Views.Location{2} - bootstrap.init.first_location) < 0.05
         break;
     elseif i == bootstrap.init.numTrials
         warning('bad x value in bootstrap after max iterations')

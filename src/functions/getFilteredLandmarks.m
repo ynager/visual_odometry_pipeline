@@ -11,7 +11,7 @@ c_points = (R'*(xyzpoints - T')')';
 
 %find points outside of max_radius and behind camera
 outliers = any([(c_points(:,3) < min_distance_threshold)'; ... 
-    (sqrt(c_points(:,1).^2 + c_points(:,2).^2+ c_points(:,3).^2) > max_radius)'],1);
+    (sqrt(c_points(:,1).^2 + c_points(:,2).^2 + c_points(:,3).^2) > max_radius)'],1);
 
 inliers_ind = find(~outliers);
 

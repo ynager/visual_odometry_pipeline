@@ -1,16 +1,14 @@
 % Parameters File
 
-%*********dataset***********
-% dataset (0: KITTI, 1: Malaga, 2: parking)
+%********* dataset *********** (0: KITTI, 1: Malaga, 2: parking)
 ds = 2;
 
-%*********debugging*********
-% printouts for debugging
-debug.print_tracking = true; %for Tracking in processFrame
-debug.print_p3p = true; %for p3p in processFrame (inlier and delta_loc)
-debug.print_triangulation = true; % for alpha value based triangulation in processFrame
-debug.print_new_landmarks = true; % for nbr of new landmarks in triangulation
-debug.print_new_features = true; % for detection of new keypoints
+%********* debugging printouts *********
+debug.print_tracking = true;                                                %for Tracking in processFrame
+debug.print_p3p = true;                                                     %for p3p in processFrame (inlier and delta_loc)
+debug.print_triangulation = true;                                           % for alpha value based triangulation in processFrame
+debug.print_new_landmarks = true;                                           % for nbr of new landmarks in triangulation
+debug.print_new_features = true;                                            % for detection of new keypoints
 
 % interruption after each frame
 debug.keyboard_interrupt = false; 
@@ -18,54 +16,57 @@ debug.keyboard_interrupt = false;
 %*********tuning parameters***************
 % params for datasets
 switch(ds)
-    
-    %********PARKING*********    
+   
+    %*********************************************************************
+    %******  PARKING  ****************************************************    
     case 2
         
-        %***********BOOTSTRAP*********
+        %*********** BOOTSTRAP ******************************************
         
         % BOOTSTRAP images
-        bootstrap.init.numTrials = 100; % NO TUNING bootstrap init nbr trials (run bootstrap max numTrial times)
-        bootstrap.init.x_interval = [0.99 1.01]; % NO TUNING bootstrap init accepted if x value in this interval   
-        bootstrap.images = [1,3]; % used bootstrap frames
+        bootstrap.init.numTrials = 100;                                     % NO TUNING bootstrap init nbr trials (run bootstrap max numTrial times)
+        bootstrap.init.first_location = [1, 0, 0];                          % bootstrap is accepted if close to this location
+        bootstrap.images = [1,3];                                           % used bootstrap frames
         
         % feature detection method
-        bootstrap.det_method = 'harris'; % harris or fast, feature detection method        
-            bootstrap.harris.min_quality = 1e-7; % 0.001 init
+        bootstrap.det_method = 'harris';                                    % harris or fast, feature detection method        
+            bootstrap.harris.min_quality = 1e-6;                            % 0.001 init
             bootstrap.fast.min_quality = 0.01;
             
         % selectUniform / nonMaxSupression
         bootstrap.select_by_nonMax = true;
-            % nonMaxSupression
-            bootstrap.select_keypoints.delta = 1; % online: 8
-            bootstrap.select_keypoints.nbr_pts = 800; %only for viaMatrix_method
-            bootstrap.select_keypoints.viaMatrix_method = true; %true for matrix filling approach, false for keypoints_loc method
-            % selectUniform
-            bootstrap.harris.num_points = 500; % 10000 init
-            bootstrap.fast.num_points = 20000;
+        
+        % nonMaxSupression
+        bootstrap.select_keypoints.delta = 1;                               % online: 8
+        bootstrap.select_keypoints.viaMatrix_method = true;                 %true for matrix filling approach, false for keypoints_loc method
+        bootstrap.select_keypoints.nbr_pts = 800;                           %only for viaMatrix_method
+        % selectUniform
+        bootstrap.harris.num_points = 500;                                  % 10000 init
+        bootstrap.fast.num_points = 20000;
                 
-        % feature matching/tracking method
-            % KLT method
-            bootstrap.use_KLT = true;             
-                % KLT point Tracker
-                bootstrap.klt.NumPyramidLevels = 3; % online 5 % TODO: nbr was mentioned in lecture
-                bootstrap.klt.MaxBidirectionalError = 2; %5 % if inf, is not calculated
-                bootstrap.klt.BlockSize = [31 31];
-                bootstrap.klt.MaxIterations = 1000;
-            % FEATURE MATCHING method
-                bootstrap.desc_method = 'HOG'; % HOG or auto, descriptor method
-                bootstrap.match.max_ration = 0.6;    %(0,1)
-                bootstrap.match.match_threshold = 10; %(0,100)
+        % feature matching/tracking method 
+        bootstrap.use_KLT = true;
+            
+        % KLT method             
+        bootstrap.klt.NumPyramidLevels = 5;                                 % online 5 % TODO: nbr was mentioned in lecture
+        bootstrap.klt.MaxBidirectionalError = 0.3;                          %5 % if inf, is not calculated
+        bootstrap.klt.BlockSize = [31 31];
+        bootstrap.klt.MaxIterations = 2000;
+                
+        %FEATURE MATCHING method
+        bootstrap.desc_method = 'HOG';                                      % HOG or auto, descriptor method
+        bootstrap.match.max_ration = 0.6;                                   %(0,1)
+        bootstrap.match.match_threshold = 10;                               %(0,100)
         
         % estimate fundamental matrix (eFm)
-        bootstrap.eFm.numTrials = 1000; %nbr of estimateFundamentalMatrix runs
-        bootstrap.eFm.ransac.numTrials = 10000; %ransac inside of estimateFundamentalMatrix
-        bootstrap.eFm.ransac.distanceThreshold = 0.01; 
+        bootstrap.eFm.numTrials = 1000;                                     %nbr of estimateFundamentalMatrix runs
+        bootstrap.eFm.ransac.numTrials = 10000;                             %ransac inside of estimateFundamentalMatrix
+        bootstrap.eFm.ransac.distanceThreshold = 0.05; 
         bootstrap.eFm.ransac.confidence = 99.9;
         bootstrap.eFm.ransac.inlierRatio = 0.3;
         
         % disambiguate camera pose
-        bootstrap.disambiguate.wanted_point_Fraction = 0.9; % NO TUNING, only for printout needed
+        bootstrap.disambiguate.wanted_point_Fraction = 0.9;                 % NO TUNING, only for printout needed
         
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
@@ -75,7 +76,7 @@ switch(ds)
         % TODO: here params for candidate kp search in bootstrap
         bootstrap.is_close.delta = 1;
         
-        %***********PROCESSFRAME***********
+        %*********** PROCESS FRAME ****************************************
         
         % KLT point Tracker
         processFrame.klt.NumPyramidLevels = bootstrap.klt.NumPyramidLevels;
@@ -84,42 +85,45 @@ switch(ds)
         processFrame.klt.MaxIterations = bootstrap.klt.MaxIterations;
         
         % isClose fct
-        processFrame.is_close.delta = 0.5;
+        processFrame.is_close.delta = 0.1;
         
         % run p3p and ransac for 3D-2D localization
         processFrame.localization.numTrials = 3;
         
-            % ransac inside of runP3PandRANSAC
-            processFrame.p3p_ransac.num_iteration = 500;
-            processFrame.p3p_ransac.pixel_tolerance = 2;       % 2 init, better
-            processFrame.p3p_ransac.min_inlier = 8;
-            
-        %max allowed step in loc
-        processFrame.p3p.max_delta_loc = 1;
+        % ransac inside of runP3PandRANSAC
+        processFrame.p3p_ransac.num_iteration = 1000;
+        processFrame.p3p_ransac.pixel_tolerance = 2;                        % 2 init, better
+        processFrame.p3p_ransac.min_inlier = 8;
+        processFrame.p3p.max_delta_loc = 1;                                 % max allowed step in loc
 
         % triangulation
-        processFrame.triang.alpha_threshold = [deg2rad(2.5), deg2rad(30)]; % 20 init
-        processFrame.triang.rep_e_threshold = 3; %init 3 % max allowed reprojection error in triangulation
-        processFrame.triang.radius_threshold = 80; % max allowable radius from cam
+        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];  % 20 init
+        processFrame.triang.rep_e_threshold = 1;                            %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 60;                          % max allowable radius from cam
         processFrame.triang.min_distance_threshold = 1; 
-        processFrame.triang.num_landmarks = 400;
+        processFrame.triang.num_landmarks = 70;                            % number of landmarks that are triangulated
+        processFrame.triang.landmark_threshold = 150;                       % landmarks are triangulated if num landmarks below this value
 
         % detect new candidate kp
-        processFrame.max_candidate_keypoints = 3000;    %no new keypoints are added if above max 
+        processFrame.max_candidate_keypoints = 1000;                        %no new keypoints are added if above max 
         processFrame.det_method = bootstrap.det_method;
-            % harris
-            processFrame.harris.min_quality_process = 3e-8;
-            processFrame.harris.filter_size = 7; %must be odd
+            
+        % harris
+        processFrame.harris.min_quality_process = 1e-7;
+        processFrame.harris.filter_size = 5;                                %must be odd
 
         % selectUniform / NonMaxSupression
         processFrame.select_by_nonMax = true;
-            % nonMaxSupression
-            processFrame.select_keypoints.delta = 2; % online: 8
-            processFrame.select_keypoints.nbr_pts = 800;
-            processFrame.select_keypoints.viaMatrix_method = true;%true for matrix filling approach, false for keypoints_loc method
-                %use sparse matrix, only useful if viaMatrix_method==true
-                processFrame.select_keypoints.sparseMatrix = true;
-            % selectUniform
-            processFrame.harris.num_points = 500;
+        
+        % nonMaxSupression
+        processFrame.select_keypoints.delta = 3;                            % online: 8
+        processFrame.select_keypoints.nbr_pts = 400;
+        processFrame.select_keypoints.viaMatrix_method = true;              %true for matrix filling approach, false for keypoints_loc method    
+        processFrame.select_keypoints.sparseMatrix = true;                  %use sparse matrix, only useful if viaMatrix_method==true
+       
+        % selectUniform
+        processFrame.harris.num_points = 600;
+            
+ 
                             
 end

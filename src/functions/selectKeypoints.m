@@ -58,7 +58,7 @@ else
         query_curr = keypoints.Location(idx,:);
         for j=1:k
             reference_curr = keypoints_location(j,:);
-            not_valid = norm(query_curr-reference_curr) < delta;
+            not_valid = sum((query_curr-reference_curr).^2) < delta^2;
             if not_valid
                 temp_metric(j)=0;
             end

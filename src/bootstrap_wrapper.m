@@ -38,8 +38,8 @@ I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
 % Detect feature points
 switch bootstrap.det_method
     case 'harris'
-        points_0 = detectHarrisFeatures(I_0, 'MinQuality', bootstrap.harris.min_quality); %detect        
-        points_1 = detectHarrisFeatures(I_1, 'MinQuality', bootstrap.harris.min_quality); %detect
+        points_0 = detectHarrisFeatures(I_0, 'MinQuality', bootstrap.harris.min_quality, 'FilterSize', processFrame.harris.filter_size); %detect        
+        points_1 = detectHarrisFeatures(I_1, 'MinQuality', bootstrap.harris.min_quality, 'FilterSize', processFrame.harris.filter_size); %detect
         
     case 'fast'
         points_0 = detectFASTFeatures(I_0, 'MinQuality', bootstrap.fast.min_quality);        
@@ -170,6 +170,10 @@ inlierPoints_1 = inlierPoints_1(ind_filt);
 %% Generate initial state
 % Get unmatched candidate keypoints in second frame wich are all
 % elements in points_1 not contained in indexPairs(:,2)
+
+% remove negative points
+pos_rows = and(points_klt(:,1) > 0, points_klt(:,2) > 0);
+points_klt = points_klt(pos_rows,:); 
 
 candidate_kp_ind = not(isClose(points_klt,inlierPoints_1.Location,bootstrap.is_close.delta));
 % candidate_kp_ind = not(ismember(points_klt,inlierPoints_1.Location,'rows'));

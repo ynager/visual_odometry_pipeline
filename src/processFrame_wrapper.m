@@ -58,7 +58,7 @@ run('parameters.m');
 if debug.print_tracking
     fprintf('\nKLT_kpT tracked: %d out of %d kp.',sum(kp_validity),length(kp_validity));
     fprintf('\nKLT_ckpT tracked: %d out of %d ckp.',sum(ckp_validity),length(ckp_validity));
-end
+end 
 
 % make sure tracked_kp and tracked_ckp are not redundant
 % TODO: check 1. what values if ckp_validity is false?
@@ -126,11 +126,13 @@ currState.landmarks = landmarks_for_p3p(inlierIdx,:);
 % TODO: maybe add check if nbr kp are below thershold, if yes run triangulation
 % with candidate_kp, dont forget to set lvl to new value
 
-% check if alpha of landmarks is above threshold -> triangulate for those
-[currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
+% triangulate new landmarks if number below threshold
+if(length(currState.landmarks) < processFrame.triang.landmark_threshold)
+    [currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
+end
 
-
-% Look for and add new candidate keypoints
+% Look for and add new candidate keypoints if number of candidates below
+% threshold
 if(length(currState.candidate_kp) < processFrame.max_candidate_keypoints)
     % detect new candidates 
     switch processFrame.det_method
