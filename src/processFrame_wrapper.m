@@ -1,4 +1,4 @@
-function [currState, currRT, globalData, debugData] = processFrame_wrapper(I_curr, ...
+function [currState, currRT, globalData] = processFrame_wrapper(I_curr, ...
                                                       prevState, KLT_keypointsTracker, ...
                                                       KLT_candidateKeypointsTracker, ...
                                                       cameraParams, globalData)
@@ -128,6 +128,9 @@ options = optimoptions(@lsqnonlin,'Display','iter','FunValCheck','on','MaxIter',
 % twist to optRT
 optRT_homo = twist2HomogMatrix(optRT_twist);
 optRT = optRT_homo(1:3,1:4);
+currRT = optRT; 
+orient = currRT(:,1:3); 
+loc = currRT(:,4); 
 
 % prepare orient and loc for return
 % TODO: check if orient and loc are empty, in that case skip the step
@@ -170,20 +173,11 @@ if(length(currState.candidate_kp) < processFrame.max_candidate_keypoints)
     if debug.print_new_features
         fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
     end
-    % check for redundancy and add new candidates to state and current pose to
-    % first obs
-    % new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.is_close.delta));
-    %%%%%%%%%%%%%%%%%%%%%%%%
 
-    % new_kp_valid = not(ismember(new_kp.Location,[currState.candidate_kp;currState.keypoints],'rows'));
     currState.candidate_kp = [currState.candidate_kp; new_kp.Location];
-    % currState.candidate_kp = [currState.candidate_kp; new_kp.Location(new_kp_valid,:)];
     currState.first_obs = [currState.first_obs; new_kp.Location];
-    % currState.first_obs = [currState.first_obs; new_kp.Location(new_kp_valid,:)];
     currState.pose_first_obs = [currState.pose_first_obs;...
         repmat([orient(:)', loc(:)'], [length(new_kp.Location),1])];
-    % currState.pose_first_obs = [currState.pose_first_obs;...
-    %     repmat([orient(:)', loc(:)'], [length(new_kp.Location(new_kp_valid,:)),1])];
 
 end
 % finally update KLT_keypointsTracker and KLT_candidateKeypointsTracker
