@@ -8,10 +8,15 @@ function [xyzpoints, ind_filt, ind_invalid] = getFilteredLandmarks(xyzpoints, re
 % alternative:
 c_points = (R'*(xyzpoints - T')')';
 
-%find points outside of max_radius and behind camera
-invalid = any([(c_points(:,3) < min_distance_threshold)'; ... 
-    (sqrt(c_points(:,1).^2 + c_points(:,2).^2 + c_points(:,3).^2) > max_radius)'; ...
-    reprError' > rep_e_threshold],1);
+invalid_1 = c_points(:,3) < min_distance_threshold; 
+invalid_2 = (c_points(:,1).^2 + c_points(:,2).^2 + c_points(:,3).^2) > max_radius^2; 
+invalid_3 = reprError > rep_e_threshold; 
+ 
+invalid = invalid_3 | invalid_2 | invalid_1;
+ 
+fprintf('\n\n# triang invalid due to distance behind threshold: %d\n', sum(invalid_1)); 
+fprintf('# triang invalid due to exceeding max radius: %d\n', sum(invalid_2)); 
+fprintf('# triang invalid due to repr error above threshold: %d\n\n', sum(invalid_3)); 
 
 
 %get indices of valid/invalid points
