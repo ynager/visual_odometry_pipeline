@@ -103,12 +103,12 @@ switch(ds)
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
-        processFrame.triang.rep_e_threshold = 10;                            %init 3 % max allowed reprojection error in triangulation
-        processFrame.triang.radius_threshold = 40;                          % max allowable radius from cam
-        processFrame.triang.min_distance_threshold = 1; 
-        processFrame.triang.num_landmarks_goal = 300;                       % average number of landmarks to achieve
+        processFrame.triang.rep_e_threshold = 20;                            %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 250;                          % max allowable radius from cam
+        processFrame.triang.min_distance_threshold = .2; 
+        processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
         processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 0.9;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
+        processFrame.triang.num_landmarks_margin = 0.5;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
             
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 4000;                        %no new keypoints are added if above max 
@@ -122,7 +122,7 @@ switch(ds)
         processFrame.select_by_nonMax = true;
         
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 1;                            % online: 8
+        processFrame.select_keypoints.delta = 2;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 500;
         processFrame.select_keypoints.viaMatrix_method = true;              %true for matrix filling approach, false for keypoints_loc method    
         processFrame.select_keypoints.sparseMatrix = true;                  %use sparse matrix, only useful if viaMatrix_method==true
