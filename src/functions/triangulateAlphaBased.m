@@ -7,6 +7,9 @@ function [ currState, globalData ] = triangulateAlphaBased( currState, cameraPar
 % get parameters
 run('parameters.m');
 
+% set debug data to zero
+globalData.debug.ckeypoints_invalid = [0, 0];
+
 % check if current number of landmarks is larger than goal number * margin
 margin = processFrame.triang.num_landmarks_margin; 
 if(length(currState.landmarks) > margin*processFrame.triang.num_landmarks_goal)
