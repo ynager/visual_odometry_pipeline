@@ -57,6 +57,7 @@ if ~isempty(globalData.debug.ckeypoints_invalid) && plotParams.plot_invalid_ckey
     scatter(globalData.debug.ckeypoints_invalid(:,1), globalData.debug.ckeypoints_invalid(:,2), 5, 'magenta', 'Marker', 'o');
 end
 hold off; 
+legend('candidate keypoints', 'keypoints', 'p3p outliers', 'invalid triangulations');  
 
 
 end
