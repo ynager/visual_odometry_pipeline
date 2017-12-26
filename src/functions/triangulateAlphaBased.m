@@ -88,7 +88,7 @@ num_new_landmarks = ceil(offset + (processFrame.triang.num_landmarks_goal - leng
 unfiltered_landmarks = unfiltered_landmarks(alpha_ok,:); 
 reprojection_errors = reprojection_errors(alpha_ok); 
 
-[xyzPoints_filt, ind_filt, ind_invalid] = ... 
+[xyzPoints_filt, ind_filt, ind_invalid, ratio] = ... 
     getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, num_new_landmarks);    
 
 % get indices relative to total array back

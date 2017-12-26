@@ -121,7 +121,12 @@ currRT_twist = HomogMatrix2twist([currRT;[0 0 0 1]]);
 %initialise for lsqnonlin
 f=@(RT_twist)rep_e_nonlinopt(RT_twist,double(kp_for_p3p(inlierIdx,:)), double(landmarks_for_p3p(inlierIdx,:)), cameraParams);
 %set options for lsqnonlin
-options = optimoptions(@lsqnonlin,'Display','iter','FunValCheck','on','MaxIter',400);
+if debug.print_lsqnonlin
+    options = optimoptions(@lsqnonlin,'Display','iter','FunValCheck','on','MaxIter',400);
+else
+    options = optimoptions(@lsqnonlin,'Display','off','FunValCheck','on','MaxIter',400);
+end
+
 % lowerbount = closetocurrRT;
 % upperbound = closetocurrRT;
 [optRT_twist,squarederrornorm,errors,exitflag] = lsqnonlin(f,currRT_twist,[],[],options);

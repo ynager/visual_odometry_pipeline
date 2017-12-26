@@ -82,7 +82,7 @@ if(bootstrap.use_KLT)
     
     %convert to cornerPoint object to match template 
     matchedPoints_1 = cornerPoints(matchedPoints_1); 
-    indexPairs = ones(matchedPoints_1.Count, 2); 
+%     indexPairs = ones(matchedPoints_1.Count, 2); 
 
 
 % USE FEATURE MATCHING
@@ -108,65 +108,79 @@ else
     matchedPoints_1 = points_1(indexPairs(:,2));
 end
 
-fprintf('\nMatches found: %d\n', length(matchedPoints_0));
+fprintf('\nFeature Matches found: %d\n', length(matchedPoints_0));
 
-% ESTIMATE FUNDAMENTAL MATRIX
-for i = 1:bootstrap.eFm.numTrials
-    % this function uses RANSAC and the 8-point algorithm
-    [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
-                 'Method','RANSAC', 'DistanceThreshold', bootstrap.eFm.ransac.distanceThreshold, ... 
-                 'Confidence',bootstrap.eFm.ransac.confidence, 'NumTrials', bootstrap.eFm.ransac.numTrials);
-             
-    % Make sure we get enough inliers
-    ratio = sum(inlierIdx) / numel(inlierIdx); 
-    if(ratio > bootstrap.eFm.ransac.inlierRatio)
-        fprintf('Fraction of inliers: %.2f',ratio);
-        break;
+% BOOTSTRAP LOOP*************************************************
+for bootstrap_ctr = 1:bootstrap.loop.numTrials
+    
+    % ESTIMATE FUNDAMENTAL MATRIX
+    for i = 1:bootstrap.eFm.numTrials
+        % this function uses RANSAC and the 8-point algorithm
+        [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
+                     'Method','RANSAC', 'DistanceThreshold', bootstrap.eFm.ransac.distanceThreshold, ... 
+                     'Confidence',bootstrap.eFm.ransac.confidence, 'NumTrials', bootstrap.eFm.ransac.numTrials);
+
+        % Make sure we get enough inliers
+        ratio = sum(inlierIdx) / numel(inlierIdx); 
+        if(ratio > bootstrap.eFm.ransac.inlierRatio)
+            fprintf('Fraction of inliers for F: %.2f',ratio);
+            break;
+        elseif i==bootstrap.eFm.numTrials
+            dispaly('max iterations in estimateFundamentalMatrix trials reached without success, bad F is likely')
+        end
     end
-end
 
-% get essential matrix (must be transposed for relativeCameraPose)
-E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix;
+    % get essential matrix (must be transposed for relativeCameraPose)
+    E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix;
 
-% we arent allowed to use directly this function: 
-%[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0, matchedPoints_1, cameraParams); 
+    % we arent allowed to use directly this function: 
+    %[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0, matchedPoints_1, cameraParams); 
 
-% get only matched pairs that are inliers
-indexPairs = indexPairs(inlierIdx, :);
+    % get only matched pairs that are inliers
+%     indexPairs = indexPairs(inlierIdx, :);
 
-% Get the inlier points in each image
-inlierPoints_0 = matchedPoints_0(inlierIdx, :);
-inlierPoints_1 = matchedPoints_1(inlierIdx, :);
+    % Get the inlier points in each image
+    inlierPoints_0 = matchedPoints_0(inlierIdx, :);
+    inlierPoints_1 = matchedPoints_1(inlierIdx, :);
 
-% Compute the camera pose from the fundamental matrix and disambiguate
-% invalid configurations using inlierPoints
-[orient, loc, validPointFraction] = ...
-        relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
-fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
+    % Compute the camera pose from the fundamental matrix and disambiguate
+    % invalid configurations using inlierPoints
+    [orient, loc, validPointFraction] = ...
+            relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
+    fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 
-if(validPointFraction < bootstrap.disambiguate.wanted_point_Fraction) 
-    fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
-end
+    if(validPointFraction < bootstrap.disambiguate.wanted_point_Fraction) 
+        fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
+    end
 
-%% Triangulate to get 3D points
+    %% Triangulate to get 3D points
 
-% get rotation matrix and translation vector from pose orientation and location
-R = orient; 
-t = -loc'; 
+    % get rotation matrix and translation vector from pose orientation and location
+    R = orient; 
+    t = -loc'; 
 
-% calculate camera matrices
-M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
-M2 = cameraParams.IntrinsicMatrix * [R, t];
+    % calculate camera matrices
+    M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
+    M2 = cameraParams.IntrinsicMatrix * [R, t];
 
-% triangulate
-[xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
+    % triangulate
+    [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
 
-% filter
-[xyzPoints, ind_filt] =  ...
-    getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
+    % filter
+    [xyzPoints, ind_filt,~,ratio] =  ...
+        getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
 
-inlierPoints_0 = inlierPoints_0(ind_filt);
-inlierPoints_1 = inlierPoints_1(ind_filt);
+    inlierPoints_0 = inlierPoints_0(ind_filt);
+    inlierPoints_1 = inlierPoints_1(ind_filt);
+
+    if ratio>bootstrap.triang.min_landmark_ratio
+        fprintf('\nlandmarkfilter reached a ratio of %.2f. bootstrap was most likely successful',ratio); 
+        break;
+    else
+        fprintf('\ntoo many rejected landmarks, start bootstrap again, ratio: %.2f',ratio); 
+    end
+
+end%*******************************************************
 
 
 %% Generate initial state
@@ -184,6 +198,13 @@ candidate_kp = points_klt(candidate_kp_ind,:);
 % candidate_kp = points_klt(candidate_kp_ind,:);
 
 currState.keypoints = inlierPoints_1.Location;
+
+%%%%%debug thomas%%%%%%%%%%
+%do not use outliers as candidates
+%maybe: use filtered landmarks due to number as candidates, handle case if
+%none
+candidate_kp = candidate_kp(1,:);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 currState.landmarks = xyzPoints; 
 currState.candidate_kp = candidate_kp; 

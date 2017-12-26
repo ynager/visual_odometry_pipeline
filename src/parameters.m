@@ -9,6 +9,7 @@ debug.print_p3p = true;                                                     %for
 debug.print_triangulation = true;                                           % for alpha value based triangulation in processFrame
 debug.print_new_landmarks = true;                                           % for nbr of new landmarks in triangulation
 debug.print_new_features = true;                                            % for detection of new keypoints
+debug.print_lsqnonlin = false;
 
 %********* plot parameters ************
 plotParams.plot_p3p_outliers = true; 
@@ -34,16 +35,15 @@ switch(ds)
         
         % feature detection method
         bootstrap.det_method = 'harris';                                    % harris or fast, feature detection method        
-            bootstrap.harris.min_quality = 1e-6;                            % 0.001 init
+            bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
             bootstrap.fast.min_quality = 0.01;
             
         % selectUniform / nonMaxSupression
         bootstrap.select_by_nonMax = true;
-        
         % nonMaxSupression
-        bootstrap.select_keypoints.delta = 1;                               % online: 8
-        bootstrap.select_keypoints.viaMatrix_method = true;                 %true for matrix filling approach, false for keypoints_loc method
-        bootstrap.select_keypoints.nbr_pts = 800;                           %only for viaMatrix_method
+        bootstrap.select_keypoints.delta = 1;  %TUNE                        % online: 8
+        bootstrap.select_keypoints.viaMatrix_method = false;                 %true for matrix filling approach, false for keypoints_loc method
+        bootstrap.select_keypoints.nbr_pts = 800; %TUNE                    
         % selectUniform
         bootstrap.harris.num_points = 500;                                  % 10000 init
         bootstrap.fast.num_points = 20000;
@@ -62,12 +62,15 @@ switch(ds)
         bootstrap.match.max_ration = 0.6;                                   %(0,1)
         bootstrap.match.match_threshold = 10;                               %(0,100)
         
+        % BOOTSTRAP LOOP
+        bootstrap.loop.numTrials = 50;
+        
         % estimate fundamental matrix (eFm)
-        bootstrap.eFm.numTrials = 1000;                                     %nbr of estimateFundamentalMatrix runs
+        bootstrap.eFm.numTrials = 20;                                       %nbr of estimateFundamentalMatrix runs
         bootstrap.eFm.ransac.numTrials = 10000;                             %ransac inside of estimateFundamentalMatrix
         bootstrap.eFm.ransac.distanceThreshold = 0.05; 
-        bootstrap.eFm.ransac.confidence = 99.9;
-        bootstrap.eFm.ransac.inlierRatio = 0.3;
+        bootstrap.eFm.ransac.confidence = 99.99999999999999;
+        bootstrap.eFm.ransac.inlierRatio = 0.8;
         
         % disambiguate camera pose
         bootstrap.disambiguate.wanted_point_Fraction = 0.9;                 % NO TUNING, only for printout needed
@@ -75,11 +78,12 @@ switch(ds)
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 
-        bootstrap.triang.num_landmarks_bootstrap = 600;
+        bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
         bootstrap.triang.rep_e_threshold = inf; 
+        bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
         
         % TODO: here params for candidate kp search in bootstrap
-        bootstrap.is_close.delta = 1;
+        bootstrap.is_close.delta = 1;                                      % currently meaningless
         
         %*********** PROCESS FRAME ****************************************
         

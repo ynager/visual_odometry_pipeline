@@ -7,7 +7,7 @@ function final_keypoints = selectKeypoints(keypoints, delta, nbr_pts, viaMatrix_
 % get parameters
 run('parameters.m');
 
-if viaMatrix_method
+if viaMatrix_method %note: needs ROUNDING of kp
     r = delta;
     num = nbr_pts;
 
@@ -17,7 +17,7 @@ if viaMatrix_method
     final_keypoints = zeros(num, 2);
 
     temp_scores = zeros(ceil(max(Y(:))),ceil(max(X(:))));
-    ind = sub2ind(size(temp_scores),ceil(Y),ceil(X));
+    ind = sub2ind(size(temp_scores),round(Y),round(X));
     temp_scores(ind) = keypoints.Metric;
     temp_scores = padarray(temp_scores, [r r]);
     if processFrame.select_keypoints.sparseMatrix

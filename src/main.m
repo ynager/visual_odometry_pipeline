@@ -80,9 +80,10 @@ for i = 1:bootstrap.init.numTrials
     if norm(globalData.vSet.Views.Location{2} - bootstrap.init.first_location) < 0.05
         break;
     elseif i == bootstrap.init.numTrials
-        warning('bad x value in bootstrap after max iterations')
+        warning('\n\nDEBUGGER>> BOOTSTRAP failed, bad x value in bootstrap after max iterations\n\n')
     end
         
+    fprintf('\n\nDEBUGGER>> BOOTSTRAP failed, run again\n\n'); 
     
     % apply scale factor to match to ground truth
     %globalData = applyScaleFactor(globalData); 
