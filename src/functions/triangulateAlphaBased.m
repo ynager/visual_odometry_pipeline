@@ -22,6 +22,10 @@ T2 = currRT(:,4);
 % current M
 M2 = cameraParams.IntrinsicMatrix * [R2, -T2];
 
+%%%%%%???????????
+% M2 = cameraParams.IntrinsicMatrix * [R2', -R2'*T2];
+%%%%%%???????????
+
 %calc current bearing vector
 bearings_curr = getBearingVector( currState.candidate_kp, cameraParams.IntrinsicMatrix );
 bearings_curr_W = R2*bearings_curr';

@@ -94,7 +94,7 @@ switch(ds)
         processFrame.klt.MaxIterations = bootstrap.klt.MaxIterations;
         
         % isClose fct
-        processFrame.is_close.delta = 0.1;
+        processFrame.is_close.delta = 0.1; %TUNE
         
         % run p3p and ransac for 3D-2D localization
         processFrame.localization.numTrials = 3;
@@ -103,7 +103,7 @@ switch(ds)
         processFrame.p3p_ransac.num_iteration = 1000;
         processFrame.p3p_ransac.pixel_tolerance = 2;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 8;
-        processFrame.p3p.max_delta_loc = 1;                                 % max allowed step in loc
+        processFrame.p3p.max_delta_loc = 10;                                 % max allowed step in loc
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init

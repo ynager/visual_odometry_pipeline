@@ -158,6 +158,11 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     % get rotation matrix and translation vector from pose orientation and location
     R = orient; 
     t = -loc'; 
+    
+    %%%%%%%%?????????
+%     R = orient'; 
+%     t = -loc*orient'; 
+    %%%%%%%%?????????
 
     % calculate camera matrices
     M1 = cameraParams.IntrinsicMatrix * eye(3,4); 

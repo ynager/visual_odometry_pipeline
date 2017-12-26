@@ -10,6 +10,7 @@ addpath('../datasets')
 addpath('plot')
 addpath('functions')
 addpath('functions/NonLinLS')
+% addpath('functions/triangulation')
 
 %get ground truth, K, and last frame index from database
 if ds == 0

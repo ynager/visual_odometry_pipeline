@@ -84,7 +84,8 @@ landmarks_for_p3p = prevState.landmarks(kp_validity,:);
 for i = 1:processFrame.localization.numTrials
     
     % run 3D-2D algo
-    [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
+    [ orient, loc, inlier_valid ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams );
+        
     currRT = [orient,loc];
     
     if(isempty(loc) || isempty(orient))
@@ -109,9 +110,9 @@ for i = 1:processFrame.localization.numTrials
 end
 
 if debug.print_p3p
-    fprintf('\nTotal matches found in p3p: %d', sum(inlierIdx));  
-    fprintf('\nFraction of inliers(p3p) of input kp in p3p: %.2f',sum(inlierIdx)/length(inlierIdx));
-    fprintf('\nFraction of inliers(p3p) of tracked kp: %.2f',sum(inlierIdx)/length(kp_validity));
+    fprintf('\nTotal matches found in p3p: %d', sum(inlier_valid));  
+    fprintf('\nFraction of inliers(p3p) of input kp in p3p: %.2f',sum(inlier_valid)/length(inlier_valid));
+    fprintf('\nFraction of inliers(p3p) of tracked kp: %.2f',sum(inlier_valid)/length(kp_validity));
 end
 
 %non-linear optimization of R and T
@@ -119,7 +120,7 @@ end
 currRT_twist = HomogMatrix2twist([currRT;[0 0 0 1]]);
 % use lonlinear optimization (least squares) to minimize reprojection error
 %initialise for lsqnonlin
-f=@(RT_twist)rep_e_nonlinopt(RT_twist,double(kp_for_p3p(inlierIdx,:)), double(landmarks_for_p3p(inlierIdx,:)), cameraParams);
+f=@(RT_twist)rep_e_nonlinopt(RT_twist,double(kp_for_p3p(inlier_valid,:)), double(landmarks_for_p3p(inlier_valid,:)), cameraParams);
 %set options for lsqnonlin
 if debug.print_lsqnonlin
     options = optimoptions(@lsqnonlin,'Display','iter','FunValCheck','on','MaxIter',400);
@@ -133,6 +134,9 @@ end
 % twist to optRT
 optRT_homo = twist2HomogMatrix(optRT_twist);
 optRT = optRT_homo(1:3,1:4);
+%%%%DEBUG%%%%%%%
+% optRT=[eye(3),optRT(:,4)];
+%%%%%%%%%%%%%%%
 currRT = optRT; 
 orient = currRT(:,1:3); 
 loc = currRT(:,4); 
@@ -142,8 +146,8 @@ loc = currRT(:,4);
 fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 
 % add used keypoints and landmarks to state, discard all others
-currState.keypoints = kp_for_p3p(inlierIdx,:);
-currState.landmarks = landmarks_for_p3p(inlierIdx,:);
+currState.keypoints = kp_for_p3p(inlier_valid,:);
+currState.landmarks = landmarks_for_p3p(inlier_valid,:);
 
 
 % triangulate new landmarks
@@ -195,8 +199,8 @@ fprintf('\nEnd of step. Numbers of keypoints: %d',length(currState.keypoints));
 
 %% Fill up debut plotting data
 % get p3p outlier keypoints and landmarks
-globalData.debug.p3p_outlier_keypoints = kp_for_p3p(~inlierIdx,:); 
-globalData.debug.p3p_outlier_landmarks = landmarks_for_p3p(~inlierIdx,:); 
+globalData.debug.p3p_outlier_keypoints = kp_for_p3p(~inlier_valid,:); 
+globalData.debug.p3p_outlier_landmarks = landmarks_for_p3p(~inlier_valid,:); 
 
 
 end

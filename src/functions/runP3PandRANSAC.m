@@ -1,4 +1,4 @@
-function [ orient, loc, inlierIdx ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams )
+function [ orient, loc, inlier_valid ] = runP3PandRANSAC( kp_for_p3p, landmarks_for_p3p, cameraParams )
 %RUNP3PANDRANSAC should do the same as [orient, loc, inlierIdx] = estimateWorldCameraPose(kp_for_p3p, landmarks_for_p3p, cameraParams)
 
 % get parameters
@@ -9,7 +9,7 @@ k = 3;
 min_inlier_count = processFrame.p3p_ransac.min_inlier;
 
 % Initialize RANSAC.
-inlierIdx = zeros(size(kp_for_p3p, 1),1);
+inlier_valid = zeros(size(kp_for_p3p, 1),1);
 % (row, col) to (u, v)
 % kp_for_p3p = fliplr(kp_for_p3p);
 max_num_inliers = 0;
@@ -68,7 +68,7 @@ for i = 1:num_iterations
     if nnz(is_inlier) > max_num_inliers && ...
             nnz(is_inlier) >= min_inlier_count
         max_num_inliers = nnz(is_inlier);        
-        inlierIdx = is_inlier;
+        inlier_valid = is_inlier;
         orient_C_W = R_C_W;
         loc_C_W = t_C_W;
     end
