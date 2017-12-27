@@ -19,11 +19,11 @@ end
 % calc constant R and T for current pose
 R2 = currRT(:,1:3);
 T2 = currRT(:,4);
-% current M
-M2 = cameraParams.IntrinsicMatrix * [R2, -T2];
 
+% current M
 %%%%%%???????????
-% M2 = cameraParams.IntrinsicMatrix * [R2', -R2'*T2];
+% M2 = cameraParams.IntrinsicMatrix * [R2, T2];
+M2 = cameraParams.IntrinsicMatrix * [R2', (-T2'*R2')'];
 %%%%%%???????????
 
 %calc current bearing vector
@@ -66,10 +66,12 @@ for i = 1:size(currState.pose_first_obs,1)
         alpha_ok(i) = true; 
         
         % get M
-        M1 = cameraParams.IntrinsicMatrix * [R1, -T1]; 
+        % ???????????
+        %M1 = cameraParams.IntrinsicMatrix * [R1, -T1];
+        M1 = cameraParams.IntrinsicMatrix * [R1', (-T1'*R1')']; 
+        % ???????????
         
-        % TODO: maybe use reprojectionErrors as decision hot to proceed?
-        % triangulate
+        % triangulate 
         [xyzPoints, reprojectionErrors] = triangulate(currState.first_obs(i,:),currState.candidate_kp(i,:), M1', M2');
         
         % Fill in unfiltered values of every triangulated point 

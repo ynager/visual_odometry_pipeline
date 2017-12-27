@@ -12,7 +12,7 @@ invalid_1 = c_points(:,3) < min_distance_threshold;
 invalid_2 = (c_points(:,1).^2 + c_points(:,2).^2 + c_points(:,3).^2) > max_radius^2; 
 invalid_3 = reprError > rep_e_threshold; 
  
-invalid = invalid_3 | invalid_2 | invalid_1;
+invalid = invalid_3 | invalid_2 ; %| invalid_1; %REMOVED FOR DEBUGGING
  
 fprintf('\n\n# triang invalid due to distance behind threshold: %d\n', sum(invalid_1)); 
 fprintf('# triang invalid due to exceeding max radius: %d\n', sum(invalid_2)); 

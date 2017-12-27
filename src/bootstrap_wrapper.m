@@ -126,18 +126,12 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
             fprintf('Fraction of inliers for F: %.2f',ratio);
             break;
         elseif i==bootstrap.eFm.numTrials
-            dispaly('max iterations in estimateFundamentalMatrix trials reached without success, bad F is likely')
+            display('max iterations in estimateFundamentalMatrix trials reached without success, bad F is likely')
         end
     end
 
     % get essential matrix (must be transposed for relativeCameraPose)
     E = cameraParams.IntrinsicMatrix'*F*cameraParams.IntrinsicMatrix;
-
-    % we arent allowed to use directly this function: 
-    %[E, inlierIdx] = estimateEssentialMatrix(matchedPoints_0, matchedPoints_1, cameraParams); 
-
-    % get only matched pairs that are inliers
-%     indexPairs = indexPairs(inlierIdx, :);
 
     % Get the inlier points in each image
     inlierPoints_0 = matchedPoints_0(inlierIdx, :);
@@ -155,25 +149,27 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
 
     %% Triangulate to get 3D points
 
-    % get rotation matrix and translation vector from pose orientation and location
-    R = orient; 
-    t = -loc'; 
-    
+    % get rotation matrix and translation vector from pose orientation and location    
     %%%%%%%%?????????
-%     R = orient'; 
-%     t = -loc*orient'; 
-    %%%%%%%%?????????
+    %R = orient; 
+    %t = -loc'; 
+    R = orient'; 
+    t = -loc*orient';
 
     % calculate camera matrices
     M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
-    M2 = cameraParams.IntrinsicMatrix * [R, t];
+    M2 = cameraParams.IntrinsicMatrix * [R, t'];
+    %M1 = eye(4,3)*cameraParams.IntrinsicMatrix; 
+    %M2 = [R;t]*cameraParams.IntrinsicMatrix;
+    %%%%%%%%?????????
 
     % triangulate
-    [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2'); 
+    [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
+    
 
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...
-        getFilteredLandmarks(xyzPoints, reprojectionErrors, R, t,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
+        getFilteredLandmarks(xyzPoints, reprojectionErrors, orient, loc',  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
 
     inlierPoints_0 = inlierPoints_0(ind_filt);
     inlierPoints_1 = inlierPoints_1(ind_filt);
