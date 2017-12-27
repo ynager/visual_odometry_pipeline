@@ -6,7 +6,9 @@ function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoi
 %translate and rotate points into camera frame
 % c_points = (xyzpoints - T')*R';
 % alternative:
-c_points = (R'*(xyzpoints - T')')';
+% c_points = (R'*(xyzpoints - T')')';
+c_points = (R')*(xyzpoints')-(R')*T;
+c_points = c_points';
 
 invalid_1 = c_points(:,3) < min_distance_threshold; 
 invalid_2 = (c_points(:,1).^2 + c_points(:,2).^2 + c_points(:,3).^2) > max_radius^2; 

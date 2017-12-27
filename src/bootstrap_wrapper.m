@@ -116,9 +116,12 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     % ESTIMATE FUNDAMENTAL MATRIX
     for i = 1:bootstrap.eFm.numTrials
         % this function uses RANSAC and the 8-point algorithm
-        [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
-                     'Method','RANSAC', 'DistanceThreshold', bootstrap.eFm.ransac.distanceThreshold, ... 
-                     'Confidence',bootstrap.eFm.ransac.confidence, 'NumTrials', bootstrap.eFm.ransac.numTrials);
+%         [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
+%                      'Method','RANSAC', 'DistanceThreshold', bootstrap.eFm.ransac.distanceThreshold, ... 
+%                      'Confidence',bootstrap.eFm.ransac.confidence, 'NumTrials', bootstrap.eFm.ransac.numTrials);
+
+    	[F,inlierIdx]=estimateFundamental_RANSAC(matchedPoints_0, matchedPoints_1,bootstrap.eFm.ransac.distanceThreshold,bootstrap.eFm.ransac.numTrials);
+
 
         % Make sure we get enough inliers
         ratio = sum(inlierIdx) / numel(inlierIdx); 
@@ -139,13 +142,26 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
 
     % Compute the camera pose from the fundamental matrix and disambiguate
     % invalid configurations using inlierPoints
-    [orient, loc, validPointFraction] = ...
-            relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
+%     [orient, loc, validPointFraction] = ...
+%             relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
+
+    % Obtain extrinsic parameters (R,t) from E
+    [Rots,u3] = decomposeEssentialMatrix(E);
+
+    % Disambiguate among the four possible configurations
+    p0 = [inlierPoints_0.Location ones(length(inlierPoints_0.Location),1)]';
+    p1 = [inlierPoints_1.Location ones(length(inlierPoints_1.Location),1)]';
+    K = cameraParams.IntrinsicMatrix;
+    [orient_C_W,loc_C_W] = disambiguateRelativePose(Rots,u3,p0,p1,K,K);
+    orient = orient_C_W';
+    loc = -orient*loc_C_W;
+
     fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 
-    if(validPointFraction < bootstrap.disambiguate.wanted_point_Fraction) 
-        fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
-    end
+    %TODO put in another savetymeasurement
+%     if(validPointFraction < bootstrap.disambiguate.wanted_point_Fraction) 
+%         fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
+%     end
 
     %% Triangulate to get 3D points
 
@@ -153,12 +169,14 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     %%%%%%%%?????????
     %R = orient; 
     %t = -loc'; 
-    R = orient'; 
-    t = -loc*orient';
+%     R = orient'; 
+%     t = -loc*orient';
+    R = orient';
+    t = -R*loc;
 
     % calculate camera matrices
     M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
-    M2 = cameraParams.IntrinsicMatrix * [R, t'];
+    M2 = cameraParams.IntrinsicMatrix * [R, t];
     %M1 = eye(4,3)*cameraParams.IntrinsicMatrix; 
     %M2 = [R;t]*cameraParams.IntrinsicMatrix;
     %%%%%%%%?????????
@@ -169,7 +187,7 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
 
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...
-        getFilteredLandmarks(xyzPoints, reprojectionErrors, orient, loc',  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
+        getFilteredLandmarks(xyzPoints, reprojectionErrors, orient, loc,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
 
     inlierPoints_0 = inlierPoints_0(ind_filt);
     inlierPoints_1 = inlierPoints_1(ind_filt);
@@ -218,7 +236,7 @@ viewId = 1;
 globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', eye(3), 'Location', [0 0 0], 'Points', inlierPoints_0);
 
 viewId = 2;
-globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc, 'Points', inlierPoints_1);
+globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc', 'Points', inlierPoints_1);
 
 % Store the point matches between the previous and the current views.
 % globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);

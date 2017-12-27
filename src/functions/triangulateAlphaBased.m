@@ -23,7 +23,7 @@ T2 = currRT(:,4);
 % current M
 %%%%%%???????????
 % M2 = cameraParams.IntrinsicMatrix * [R2, T2];
-M2 = cameraParams.IntrinsicMatrix * [R2', (-T2'*R2')'];
+M2 = cameraParams.IntrinsicMatrix * [R2', -R2'*T2];
 %%%%%%???????????
 
 %calc current bearing vector
@@ -68,7 +68,7 @@ for i = 1:size(currState.pose_first_obs,1)
         % get M
         % ???????????
         %M1 = cameraParams.IntrinsicMatrix * [R1, -T1];
-        M1 = cameraParams.IntrinsicMatrix * [R1', (-T1'*R1')']; 
+        M1 = cameraParams.IntrinsicMatrix * [R1', -R1'*T1]; 
         % ???????????
         
         % triangulate 
