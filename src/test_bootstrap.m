@@ -1,3 +1,4 @@
+%%%%%%%************preparation for testing***********
 addpath('plot')
 addpath('functions')
 addpath('functions/NonLinLS')
@@ -40,10 +41,16 @@ matchedPoints_0 = cornerPoints(kp_0');
 matchedPoints_1 = cornerPoints(kp_1');
 cameraParams = cameraParameters('IntrinsicMatrix', K);
 landmarks = landmarks';
+%%%%%%%%%%%%%%************finish preparation************
 
 
 
-%%%%%********************** copy paste from bootstrap    
+
+
+
+
+%%%%%**********************TESTING OF BOOTSTRAP************
+   
 % ESTIMATE FUNDAMENTAL MATRIX
 for i = 1:bootstrap.eFm.numTrials
     % this function uses RANSAC and the 8-point algorithm
@@ -118,8 +125,11 @@ M2 = cameraParams.IntrinsicMatrix * [R, t];
 % triangulate
 [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
 
-%**************** end copy paste
+%%%%%%%%%**************END TESTING**************
 
+
+
+%PRINTOUTS
 display('norm of difference between rotmatrices')
 display(R1-orient)
 

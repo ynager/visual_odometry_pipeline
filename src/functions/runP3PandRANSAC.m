@@ -10,10 +10,7 @@ min_inlier_count = processFrame.p3p_ransac.min_inlier;
 
 % Initialize RANSAC.
 inlier_valid = zeros(size(kp_for_p3p, 1),1);
-% (row, col) to (u, v)
-% kp_for_p3p = fliplr(kp_for_p3p);
 max_num_inliers = 0;
-% Replace the following with the path to your camera projection code:
 
 % RANSAC
 for i = 1:num_iterations

@@ -64,7 +64,7 @@ end
 % TODO: check 1. what values if ckp_validity is false?
 % TODO: check 2. if ismember can handle bad values from point 1.
 ckp_redundant = isClose(tracked_ckp,tracked_kp,processFrame.is_close.delta);
-% ckp_redundant = ismember(tracked_ckp,tracked_kp,'rows'); %check ckp in kp
+
 if debug.print_tracking
     fprintf('\nIn Tracking: found %d redundant ckp',sum(ckp_redundant));
 end
@@ -133,11 +133,7 @@ end
 [optRT_twist,squarederrornorm,errors,exitflag] = lsqnonlin(f,currRT_twist,[],[],options);
 % twist to optRT
 optRT_homo = twist2HomogMatrix(optRT_twist);
-optRT = optRT_homo(1:3,1:4);
-%%%%DEBUG%%%%%%%
-% optRT=[eye(3),optRT(:,4)];
-%%%%%%%%%%%%%%%
-currRT = optRT; 
+currRT = optRT_homo(1:3,1:4);
 orient = currRT(:,1:3); 
 loc = currRT(:,4); 
 
@@ -149,7 +145,6 @@ fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
 currState.keypoints = kp_for_p3p(inlier_valid,:);
 currState.landmarks = landmarks_for_p3p(inlier_valid,:);
 
-
 % triangulate new landmarks
 [currState,globalData] = triangulateAlphaBased(currState, cameraParams, currRT, globalData);
 
@@ -160,17 +155,11 @@ if(length(currState.candidate_kp) < processFrame.max_candidate_keypoints)
     switch processFrame.det_method
         case 'harris'
             new_kp = detectHarrisFeatures(I_curr, 'MinQuality', processFrame.harris.min_quality_process, 'FilterSize', processFrame.harris.filter_size);
-    %         if harris.selectUniform
-    %             new_kp = selectUniform(new_kp, harris.num_points_process, size(I_curr));       %select uniformly
-    %             if debug.print_det_method
-    %                 fprintf('\nNew features found: %d',size(new_kp,1));
-    %             end
-    %         end
         otherwise
             warning('given processFrame.det_method not yet implemented in processFrame')
     end
 
-    %%%%%%%%%test: first isClose, then selectUniform%%%%%%%%%%%%
+    %first isClose, then selectUniform
     new_kp_valid = not(isClose(new_kp.Location,[currState.candidate_kp;currState.keypoints],processFrame.select_keypoints.delta));
     new_kp = new_kp(new_kp_valid);
     if processFrame.select_by_nonMax
@@ -183,12 +172,14 @@ if(length(currState.candidate_kp) < processFrame.max_candidate_keypoints)
         fprintf('\nFound %d new features, %d were isClose, %d selected uniform.',length(new_kp_valid), length(new_kp_valid)-sum(new_kp_valid), size(new_kp.Location,1));
     end
 
+    %update candidates and respective pose and observation
     currState.candidate_kp = [currState.candidate_kp; new_kp.Location];
     currState.first_obs = [currState.first_obs; new_kp.Location];
     currState.pose_first_obs = [currState.pose_first_obs;...
         repmat([orient(:)', loc(:)'], [length(new_kp.Location),1])];
 
 end
+
 % finally update KLT_keypointsTracker and KLT_candidateKeypointsTracker
 setPoints(KLT_keypointsTracker,currState.keypoints);
 setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);

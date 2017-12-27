@@ -4,9 +4,6 @@ function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoi
 % not lie behind the camera
 
 %translate and rotate points into camera frame
-% c_points = (xyzpoints - T')*R';
-% alternative:
-% c_points = (R'*(xyzpoints - T')')';
 c_points = (R')*(xyzpoints')-(R')*T;
 c_points = c_points';
 

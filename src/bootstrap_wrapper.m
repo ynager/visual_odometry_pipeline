@@ -82,7 +82,6 @@ if(bootstrap.use_KLT)
     
     %convert to cornerPoint object to match template 
     matchedPoints_1 = cornerPoints(matchedPoints_1); 
-%     indexPairs = ones(matchedPoints_1.Count, 2); 
 
 
 % USE FEATURE MATCHING
@@ -116,12 +115,7 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     % ESTIMATE FUNDAMENTAL MATRIX
     for i = 1:bootstrap.eFm.numTrials
         % this function uses RANSAC and the 8-point algorithm
-%         [F, inlierIdx] = estimateFundamentalMatrix(matchedPoints_0, matchedPoints_1, ...
-%                      'Method','RANSAC', 'DistanceThreshold', bootstrap.eFm.ransac.distanceThreshold, ... 
-%                      'Confidence',bootstrap.eFm.ransac.confidence, 'NumTrials', bootstrap.eFm.ransac.numTrials);
-
     	[F,inlierIdx]=estimateFundamental_RANSAC(matchedPoints_0, matchedPoints_1,bootstrap.eFm.ransac.distanceThreshold,bootstrap.eFm.ransac.numTrials);
-
 
         % Make sure we get enough inliers
         ratio = sum(inlierIdx) / numel(inlierIdx); 
@@ -140,11 +134,6 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     inlierPoints_0 = matchedPoints_0(inlierIdx, :);
     inlierPoints_1 = matchedPoints_1(inlierIdx, :);
 
-    % Compute the camera pose from the fundamental matrix and disambiguate
-    % invalid configurations using inlierPoints
-%     [orient, loc, validPointFraction] = ...
-%             relativeCameraPose(E', cameraParams, inlierPoints_0, inlierPoints_1);
-
     % Obtain extrinsic parameters (R,t) from E
     [Rots,u3] = decomposeEssentialMatrix(E);
 
@@ -157,34 +146,23 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     loc = -orient*loc_C_W;
 
     fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
-
-    %TODO put in another savetymeasurement
-%     if(validPointFraction < bootstrap.disambiguate.wanted_point_Fraction) 
-%         fprintf('\nSmall fraction of valid points when running relativeCameraPose. Essential Matrix might be bad.\n'); 
-%     end
+    
+    %TODO put in a safety measurement? like count pts in front of cam?
 
     %% Triangulate to get 3D points
 
     % get rotation matrix and translation vector from pose orientation and location    
-    %%%%%%%%?????????
-    %R = orient; 
-    %t = -loc'; 
-%     R = orient'; 
-%     t = -loc*orient';
+    % swap frames, from WC to CW
     R = orient';
     t = -R*loc;
 
     % calculate camera matrices
     M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
     M2 = cameraParams.IntrinsicMatrix * [R, t];
-    %M1 = eye(4,3)*cameraParams.IntrinsicMatrix; 
-    %M2 = [R;t]*cameraParams.IntrinsicMatrix;
-    %%%%%%%%?????????
 
     % triangulate
     [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
     
-
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...
         getFilteredLandmarks(xyzPoints, reprojectionErrors, orient, loc,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
@@ -210,21 +188,18 @@ end%*******************************************************
 pos_rows = and(points_klt(:,1) > 0, points_klt(:,2) > 0);
 points_klt = points_klt(pos_rows,:); 
 
+% no candidates close to existing ones
 candidate_kp_ind = not(isClose(points_klt,inlierPoints_1.Location,bootstrap.is_close.delta));
-% candidate_kp_ind = not(ismember(points_klt,inlierPoints_1.Location,'rows'));
 candidate_kp = points_klt(candidate_kp_ind,:);
-% candidate_kp_ind = setdiff(1:length(points_klt),indexPairs(:,2));
-% candidate_kp = points_klt(candidate_kp_ind,:);
 
-currState.keypoints = inlierPoints_1.Location;
-
-%%%%%debug thomas%%%%%%%%%%
+%TODO make this proper
 %do not use outliers as candidates
 %maybe: use filtered landmarks due to number as candidates, handle case if
 %none
 candidate_kp = candidate_kp(1,:);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%update current state
+currState.keypoints = inlierPoints_1.Location;
 currState.landmarks = xyzPoints; 
 currState.candidate_kp = candidate_kp; 
 currState.first_obs = candidate_kp;

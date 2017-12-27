@@ -20,11 +20,8 @@ end
 R2 = currRT(:,1:3);
 T2 = currRT(:,4);
 
-% current M
-%%%%%%???????????
-% M2 = cameraParams.IntrinsicMatrix * [R2, T2];
+% current M, change frames!
 M2 = cameraParams.IntrinsicMatrix * [R2', -R2'*T2];
-%%%%%%???????????
 
 %calc current bearing vector
 bearings_curr = getBearingVector( currState.candidate_kp, cameraParams.IntrinsicMatrix );
@@ -65,11 +62,8 @@ for i = 1:size(currState.pose_first_obs,1)
         
         alpha_ok(i) = true; 
         
-        % get M
-        % ???????????
-        %M1 = cameraParams.IntrinsicMatrix * [R1, -T1];
+        % get M, swap frames
         M1 = cameraParams.IntrinsicMatrix * [R1', -R1'*T1]; 
-        % ???????????
         
         % triangulate 
         [xyzPoints, reprojectionErrors] = triangulate(currState.first_obs(i,:),currState.candidate_kp(i,:), M1', M2');

@@ -1,3 +1,4 @@
+%%%%%%%%%%%************prepare testing************
 clear all;
 close all;
 
@@ -45,12 +46,17 @@ currState.candidate_kp = kp_2';
 currState.first_obs = kp_1';
 cameraParams = cameraParameters('IntrinsicMatrix', K);
 % landmarks = landmarks';
+%%%%%%%%%%%***************finish preparation*************
 
 
 
 
 
-%%%%*************** copy here
+
+
+
+
+%%%%%%%%%%%%%%%%%************TRIANGULATE ALPHA BASED*************
 
 % calc constant R and T for current pose
 R2 = currRT(:,1:3);
@@ -126,9 +132,11 @@ for i = 1:size(currState.candidate_kp,1)
         alpha
     end
 end
+%%%%%%%%***********FINISH TESTING
 
 
 
+%PRINTOUTS
 diff = unfiltered_landmarks-landmarks';
 diff_norm = sqrt(diff(:,1).^2+diff(:,2).^2+diff(:,3).^2);
 display('norm of difference between original and projected landmarks')

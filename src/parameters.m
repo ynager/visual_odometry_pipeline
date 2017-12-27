@@ -71,10 +71,7 @@ switch(ds)
         bootstrap.eFm.ransac.distanceThreshold = 0.05; 
         % bootstrap.eFm.ransac.confidence = 99.99999999999999;
         bootstrap.eFm.ransac.inlierRatio = 0.7;
-        
-        % disambiguate camera pose
-%         bootstrap.disambiguate.wanted_point_Fraction = 0.9;                 % NO TUNING, only for printout needed
-        
+             
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 

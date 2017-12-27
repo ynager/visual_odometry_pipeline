@@ -152,35 +152,32 @@ end
     
 %% Questions
 
-% should we implement a delta_loc max threshold? (or orientation
-% threshold?)
+% what additional feature should we implement?
 
 
 %% TODO general
 
-% -function best landmarks (z-threshold/behincam/with lowest reprojection
-% error)
+% in ransac in bootstrap (estimateFundamental_RANSAC) -> run ransac number
+% of times according to formula!
+
+% param tuning for all datasets!
+
+% maybe test p3p (should work though)
+
+% maybe test landmarkfilter (should work though)
 
 % handle failed localization in p3p ransac
 
 % bootsrap kp candidates -> maybe search freshly on I1
+% candidate_kp -> new detection like in processFrame, not
+% outliers
 
 % dont do clac for img1 in bootstrap if not necessary
 
 % landmark filter: keep only ~300 best landmark/keypoints, all
 % other:discard
 
-% bootstrap: candidate_kp -> new detection like in processFrame, not
-% outliers
-
-% use select uniform at beginning of each step (better than all new kp?)
-
-% triang behind cameras???? MUST NOT happen!
-
-% implement threshold of loc and orient -> skip view if bad!
-
-% proper printouts -> what causes failure?
-
 %% Ideas
+
 % maybe when saving possible keypoints for later triangulation, only select k best
                
