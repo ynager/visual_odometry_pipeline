@@ -41,7 +41,7 @@ switch(ds)
         % selectUniform / nonMaxSupression
         bootstrap.select_by_nonMax = true;
         % nonMaxSupression
-        bootstrap.select_keypoints.delta = 1;  %TUNE                        % online: 8
+        bootstrap.select_keypoints.delta = 6;  %TUNE                        % online: 8
         bootstrap.select_keypoints.viaMatrix_method = false;                 %true for matrix filling approach, false for keypoints_loc method
         bootstrap.select_keypoints.nbr_pts = 800; %TUNE                    
         % selectUniform
@@ -73,7 +73,7 @@ switch(ds)
         bootstrap.eFm.ransac.inlierRatio = 0.7;
         
         % disambiguate camera pose
-        bootstrap.disambiguate.wanted_point_Fraction = 0.9;                 % NO TUNING, only for printout needed
+%         bootstrap.disambiguate.wanted_point_Fraction = 0.9;                 % NO TUNING, only for printout needed
         
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
@@ -83,7 +83,7 @@ switch(ds)
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
         
         % TODO: here params for candidate kp search in bootstrap
-        bootstrap.is_close.delta = 1;                                      % currently meaningless
+        bootstrap.is_close.delta = 6;                                      % currently meaningless
         
         %*********** PROCESS FRAME ****************************************
         
@@ -94,7 +94,7 @@ switch(ds)
         processFrame.klt.MaxIterations = bootstrap.klt.MaxIterations;
         
         % isClose fct
-        processFrame.is_close.delta = 0.1; %TUNE
+        processFrame.is_close.delta = 6; %TUNE
         
         % run p3p and ransac for 3D-2D localization
         processFrame.localization.numTrials = 3;
@@ -107,9 +107,9 @@ switch(ds)
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
-        processFrame.triang.rep_e_threshold = 20;                            %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.rep_e_threshold = 10;                            %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 250;                          % max allowable radius from cam
-        processFrame.triang.min_distance_threshold = .2; 
+        processFrame.triang.min_distance_threshold = 2; 
         processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
         processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
         processFrame.triang.num_landmarks_margin = 0.5;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
@@ -119,14 +119,14 @@ switch(ds)
         processFrame.det_method = bootstrap.det_method;
             
         % harris
-        processFrame.harris.min_quality_process = 1e-8;
+        processFrame.harris.min_quality_process = 1e-6;
         processFrame.harris.filter_size = 5;                                %must be odd
 
         % selectUniform / NonMaxSupression
         processFrame.select_by_nonMax = true;
         
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 2;                            % online: 8
+        processFrame.select_keypoints.delta = 6;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 500;
         processFrame.select_keypoints.viaMatrix_method = true;              %true for matrix filling approach, false for keypoints_loc method    
         processFrame.select_keypoints.sparseMatrix = true;                  %use sparse matrix, only useful if viaMatrix_method==true
