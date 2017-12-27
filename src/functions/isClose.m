@@ -11,16 +11,10 @@ reference_l = size(reference,1);
 isclose = zeros(query_l,1);
 
 for i=1:query_l
-    query_curr = query(i,:);
     for j=1:reference_l
-        reference_curr = reference(j,:);
         
-        not_valid = (query_curr(:,1)-reference_curr(:,1))^2 + (query_curr(:,2)-reference_curr(:,2))^2 < delta^2; 
+        isclose(i) = (query(i,1)-reference(j,1))^2 + (query(i,2)-reference(j,2))^2 < delta^2; 
         
-        if not_valid
-            isclose(i)=1;
-        end
     end
-
 end
 
