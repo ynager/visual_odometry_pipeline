@@ -1,11 +1,19 @@
 function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles, plotParams)
 warning off;  
 
-% Move the estimated camera in the plot
+% axis 1 ****************************************************
+axes(plotHandles.axes1);
+% Plot estimated camera location and orientation
+loc = globalData.vSet.Views.Location{viewId}; 
+orient = globalData.vSet.Views.Orientation{viewId};
+heading = orient * [0, 0, 1]'; 
+heading = 10*heading/norm(heading); 
+camh = heading + loc'; 
+
+h = plotHandles.axes1.Children(6);
+set(h, 'XData', loc(1), 'YData', loc(2), 'ZData', loc(3));
 h = plotHandles.axes1.Children(5);
-M = cat(1,globalData.vSet.Views.Orientation{viewId}*0.5, zeros(1,3)); 
-M = cat(2,M,[globalData.vSet.Views.Location{viewId}, 1]'); 
-h.Matrix = M; 
+set(h, 'XData', [loc(1), camh(1)], 'YData',[loc(2), camh(2)], 'ZData', [loc(3), camh(3)]);
 
 % Plot the estimated trajectory
 h = plotHandles.axes1.Children(4);
@@ -39,6 +47,7 @@ set(plotHandles.axes1,'Ylim',[min(globalData.landmarks(:,2))-1, max(globalData.l
 limsz=get(plotHandles.axes1,'ZLim');
 set(plotHandles.axes1,'Zlim',[min(globalData.landmarks(:,3))-15, max(globalData.landmarks(:,3))+1]); 
 
+% axes 2 ****************************************************
 axes(plotHandles.axes2);   
 imshow(I); 
 num_inliers = length(globalData.vSet.Views.Points{viewId}); 
