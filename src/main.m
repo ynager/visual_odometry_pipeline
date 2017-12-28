@@ -1,5 +1,6 @@
 %% Setup & Load
 %load parameters
+
 clear all; 
 close all;
 run('parameters.m');
