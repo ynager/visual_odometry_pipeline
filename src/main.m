@@ -51,7 +51,8 @@ end
 globalData.vSet = viewSet;              % viewSet with estimated data
 globalData.actualVSet = viewSet;        % viewSet with ground truth
 globalData.landmarks = [];              % 3D pointcloud (Nx3 matrix)
-globalData.debug = []; 
+globalData.debug = [];                  % init debug structure
+globalData.scale_factor = 1;            % init scale factor
 
 %create debug data
 globalData.debug.p3p_outlier_keypoints = []; 
@@ -85,10 +86,11 @@ for i = 1:bootstrap.init.numTrials
     end
         
     fprintf('\n\nDEBUGGER>> BOOTSTRAP failed, run again\n\n'); 
-    
-    % apply scale factor to match to ground truth
-    %globalData = applyScaleFactor(globalData); 
+     
 end
+
+% get the scale factor from ground truth
+%globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
 
 %% Setup Camera/Trajectory plot
 plotHandles = setupCamTrajectoryPlot(globalData); 
@@ -138,9 +140,6 @@ for i = range
                                                
     viewId = i - bootstrap.images(2) + 2; 
     globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4)', 'Points', currState.keypoints);
-
-    % Apply scale factor
-    % globalData = applyScaleFactor(globalData);
     
     updateCamTrajectoryPlot(viewId, globalData, currState, I_curr, plotHandles, plotParams); 
         
@@ -148,6 +147,11 @@ for i = range
         keyboard
     end
     pause(0.1)
+    
+    %update scale factor every now and then
+    if(mod(i,10) == 0)
+        globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
+    end
 end
     
 %% Questions

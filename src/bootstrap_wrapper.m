@@ -219,15 +219,6 @@ globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Locat
 %% update landmarks and actualVSet in globalData
 globalData.landmarks = xyzPoints; 
 
-% delete skipped views in actualVSet
-for i = 2:bootstrap.images(2)-1
-    try
-        globalData.actualVSet = deleteView(globalData.actualVSet, i);
-    catch
-    end
-    
-end
-
 %% Plotting
 
 %Plot bootstrap matches

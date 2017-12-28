@@ -1,10 +1,12 @@
 function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles, plotParams)
 warning off;  
 
+sf = globalData.scale_factor; 
+
 % axis 1 ****************************************************
 axes(plotHandles.axes1);
 % Plot estimated camera location and orientation
-loc = globalData.vSet.Views.Location{viewId}; 
+loc = globalData.vSet.Views.Location{viewId}*sf; 
 orient = globalData.vSet.Views.Orientation{viewId};
 heading = orient * [0, 0, 1]'; 
 heading = 10*heading/norm(heading); 
@@ -17,35 +19,31 @@ set(h, 'XData', [loc(1), camh(1)], 'YData',[loc(2), camh(2)], 'ZData', [loc(3), 
 
 % Plot the estimated trajectory
 h = plotHandles.axes1.Children(4);
-locations = cat(1, globalData.vSet.Views.Location{:});
+locations = cat(1, globalData.vSet.Views.Location{:})*sf;
 set(h, 'XData', locations(:,1), 'YData', ...
     locations(:,2), 'ZData', locations(:,3));
 
-% Plot the ground truth trajectory from actualVSet
-h = plotHandles.axes1.Children(3);
-locationsActual = cat(1, globalData.actualVSet.Views.Location{1:viewId});
-set(h, 'XData', locationsActual(:,1), 'YData', ...
-    locationsActual(:,2), 'ZData', locationsActual(:,3));
-
 % Updata point cloud
 h = plotHandles.axes1.Children(2);
-set(h, 'XData', globalData.landmarks(:,1), 'YData', ...
-    globalData.landmarks(:,2), 'ZData', globalData.landmarks(:,3));
+global_landmarks = globalData.landmarks*sf; 
+set(h, 'XData', global_landmarks(:,1), 'YData', ...
+    global_landmarks(:,2), 'ZData', global_landmarks(:,3));
 
 % Updata inlier point cloud
 h = plotHandles.axes1.Children(1);
-set(h, 'XData', currState.landmarks(:,1), 'YData', ...
-    currState.landmarks(:,2), 'ZData', currState.landmarks(:,3));
+curr_landmarks = currState.landmarks*sf; 
+set(h, 'XData', curr_landmarks(:,1), 'YData', ...
+    curr_landmarks(:,2), 'ZData', curr_landmarks(:,3));
 
 % set axis limits 5 meters larger than data
 limsx=get(plotHandles.axes1,'XLim');
-set(plotHandles.axes1,'Xlim',[min(globalData.landmarks(:,1))-1, max(globalData.landmarks(:,1))+1]); 
+set(plotHandles.axes1,'Xlim',[loc(1)-50, loc(1)+50]); 
 
 limsy=get(plotHandles.axes1,'YLim');
-set(plotHandles.axes1,'Ylim',[min(globalData.landmarks(:,2))-1, max(globalData.landmarks(:,2))+1]); 
+set(plotHandles.axes1,'Ylim',[loc(2)-50, loc(2)+50]); 
 
 limsz=get(plotHandles.axes1,'ZLim');
-set(plotHandles.axes1,'Zlim',[min(globalData.landmarks(:,3))-15, max(globalData.landmarks(:,3))+1]); 
+set(plotHandles.axes1,'Zlim',[loc(3)-50, loc(3)+50]); 
 
 % axes 2 ****************************************************
 axes(plotHandles.axes2);   
