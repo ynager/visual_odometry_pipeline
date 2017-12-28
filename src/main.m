@@ -153,6 +153,9 @@ for i = range
         globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
     end
 end
+
+load handel.mat
+sound(y);
     
 %% Questions
 

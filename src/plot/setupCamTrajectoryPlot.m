@@ -5,7 +5,7 @@ close all;
 %Setup Figure
 %************************************************************************
 figure();
-set(gcf,'units','points','position',[400,100,800,400],'color','w');
+set(gcf,'units','points','position',[400,100,900,400],'color','w');
 
 
 %Setup PointCloud Axes
@@ -20,32 +20,38 @@ rotate3d on;
 hold on
 view(0, 0); 
 
-% Plot estimated camera location and orientation
+% Get estimated camera location and orientation
 loc = globalData.vSet.Views.Location{1}; 
 orient = globalData.vSet.Views.Orientation{1};
 heading = orient * [0, 0, 1]'; 
 heading = 10*heading/norm(heading);
 camh = heading + loc'; 
 
-scatter3(loc(1), loc(2), loc(3), 40, 'red', 'Marker','o');
+% Current Location: 
+scatter3(loc(1), loc(2), loc(3), 40, 'red','filled', 'Marker','o');
 hold on; 
-plot3([loc(1), camh(1)], [loc(2), camh(2)], [loc(3), camh(3)], 'red', 'LineWidth', 1.2); 
+% Current Heading: 
+plot3([loc(1), camh(1)], [loc(2), camh(2)], [loc(3), camh(3)], 'red', 'LineWidth', 1.5); 
 
 % Initialize camera trajectories
+% Estimated Trajectory: 
 p3 = plot3(0, 0, 0, 'b-', 'LineWidth',2);
+% Actual Trajectory: 
 locationsActual = cat(1, globalData.actualVSet.Views.Location{1:end});
 p4 = plot3(locationsActual(:,1), locationsActual(:,2), locationsActual(:,3), 'k:', 'LineWidth',1.5);
-p5 = scatter3([], [], [],5,'black','filled','Marker','o');
-p6 = scatter3([], [], [],10,'green','filled','Marker','o');
+% Total Landmarks: 
+p5 = scatter3([], [], [],5,'black','filled','Marker','o', 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.1);
+% Current Landmarks: 
+p6 = scatter3([], [], [],10,'green','filled','Marker','o', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.5);
 
-legend([p3, p4, p5, p6], 'Estimated Trajectory', 'Actual Trajectory', 'Total landmarks', 'currState landmarks', ...
-    'Location','northeast');
+legend([p3, p4, p5, p6], 'Estimated Trajectory', 'Actual Trajectory', ...
+    'Total landmarks', 'currState landmarks', 'Location','northeast');
 view(0, 0);
 
 
 % Setup Image Axes
 % ***********************************************************************
-ax2 = axes('Position',[.4 .2 .65 .65]); 
+ax2 = axes('Position',[.45 .2 .55 .55]); 
 plotHandles.I = imshow([]); 
 
 
