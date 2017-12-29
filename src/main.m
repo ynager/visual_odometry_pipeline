@@ -23,6 +23,11 @@ if ds == 0
     K = [7.188560000000e+02 0 6.071928000000e+02
         0 7.188560000000e+02 1.852157000000e+02
         0 0 1];
+    
+    % create cameraParams object
+    cameraParams = cameraParameters('IntrinsicMatrix', K);
+    clear K;
+    
 elseif ds == 1
     % Path containing the many files of Malaga 7.
     malaga_path = '../datasets/malaga';
@@ -34,6 +39,11 @@ elseif ds == 1
     K = [621.18428 0 404.0076
         0 621.18428 309.05989
         0 0 1];
+    
+    % create cameraParams object
+    cameraParams = cameraParameters('IntrinsicMatrix', K);
+    clear K;
+    
 elseif ds == 2
     % Path containing images, depths and all...
     parking_path = '../datasets/parking';
@@ -43,6 +53,17 @@ elseif ds == 2
      
     ground_truth = load([parking_path '/poses.txt']);
     ground_truth = ground_truth(:, [end-8 end]);
+    
+    % create cameraParams object
+    cameraParams = cameraParameters('IntrinsicMatrix', K);
+    clear K;
+    
+elseif ds == 3
+    
+    last_frame = 100; 
+    ground_truth = []; 
+    load('calibration/cameraParams/cameraParams_iphone6.mat');
+    
 else
     assert(false);
 end
@@ -65,11 +86,6 @@ for i = 1:length(ground_truth)
        'Orientation', eye(3), 'Location', [ground_truth(i,1), 0, ground_truth(i,2)]);
 end
 
-
-%create cameraParams object
-cameraParams = cameraParameters('IntrinsicMatrix', K);
-clear K;
-
 %% 	BOOTSTRAP
 for i = 1:bootstrap.init.numTrials
     close all;
@@ -79,7 +95,7 @@ for i = 1:bootstrap.init.numTrials
     % run bootstrap: Estimating the pose of the second view relative to the first view
     [currState, globalData,viewId] = bootstrap_wrapper(cameraParams, globalData);
 
-    if norm(globalData.vSet.Views.Location{2} - bootstrap.init.first_location) < 0.2
+    if norm(globalData.vSet.Views.Location{2} - bootstrap.init.first_location) < 10.2
         break;
     elseif i == bootstrap.init.numTrials
         warning('\n\nDEBUGGER>> BOOTSTRAP failed, bad x value in bootstrap after max iterations\n\n')

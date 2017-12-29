@@ -10,6 +10,8 @@ function undist_image = loadImage(ds, i, cameraParams)
             left_images(i).name]));
     elseif ds == 2
         image = im2uint8(rgb2gray(imread(sprintf('../datasets/parking/images/img_%05d.png',i))));
+    elseif ds == 3
+        image = im2uint8(rgb2gray(imread(sprintf('../datasets/custom_1/images/img_%05d.png',i))));
     else
         assert(false);
     end

@@ -106,7 +106,7 @@ else
     matchedPoints_0 = points_0(indexPairs(:,1));
     matchedPoints_1 = points_1(indexPairs(:,2));
 end
-
+plotMatches(matchedPoints_0, matchedPoints_1, I_0, I_1); 
 fprintf('\nFeature Matches found: %d\n', length(matchedPoints_0));
 
 % BOOTSTRAP LOOP*************************************************
@@ -123,7 +123,8 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
             fprintf('Fraction of inliers for F: %.2f',ratio);
             break;
         elseif i==bootstrap.eFm.numTrials
-            display('max iterations in estimateFundamentalMatrix trials reached without success, bad F is likely')
+            fprintf('\nFraction of inliers for F: %.2f\n',ratio);
+            disp('Max iterations in estimateFundamentalMatrix trials reached, bad F is likely');
         end
     end
 
