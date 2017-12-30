@@ -1,12 +1,23 @@
 function plotHandles = setupCamTrajectoryPlot(globalData)
 
 close all;
+run parameters.m
 
 %Setup Figure
 %************************************************************************
 figure();
 set(gcf,'units','points','position',[400,100,900,400],'color','w');
 
+%Setup Video Capture
+%************************************************************************
+if plotParams.record_video
+    mkdir media; 
+    plotHandles.writerObj = VideoWriter('media/vis_od.avi'); 
+    plotHandles.writerObj.FrameRate = plotParams.video_framerate;
+    plotHandles.writerObj.Quality = 80; 
+    open(plotHandles.writerObj);
+    disp('Video Recording: On'); 
+end
 
 %Setup PointCloud Axes
 %************************************************************************

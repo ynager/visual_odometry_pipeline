@@ -60,7 +60,7 @@ elseif ds == 2
     
 elseif ds == 3
     
-    last_frame = 100; 
+    last_frame = 260; 
     ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');
     
@@ -170,6 +170,7 @@ for i = range
     end
 end
 
+close(plotHandles.writerObj); 
 load handel.mat
 sound(y);
     

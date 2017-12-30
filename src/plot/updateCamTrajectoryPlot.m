@@ -1,7 +1,7 @@
 function updateCamTrajectoryPlot(viewId, globalData, currState, I, plotHandles, plotParams)
 warning off;  
 
-sf = globalData.scale_factor; 
+sf = globalData.scale_factor;
 
 % axis 1 ****************************************************
 axes(plotHandles.axes1);
@@ -66,6 +66,12 @@ end
 hold off; 
 legend('candidate keypoints', 'keypoints', 'p3p outliers', 'invalid triangulations');  
 
+
+% capture frame for video ****************
+if plotParams.record_video 
+    frame = getframe(gcf);
+    writeVideo(plotHandles.writerObj, frame);
+end
 
 end
 
