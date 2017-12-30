@@ -11,6 +11,7 @@ addpath('../datasets')
 addpath('plot')
 addpath('functions')
 addpath('functions/NonLinLS')
+addpath('functions/BundleAdjustment')
 % addpath('functions/triangulation')
 
 %get ground truth, K, and last frame index from database
