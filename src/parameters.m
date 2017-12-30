@@ -12,6 +12,8 @@ debug.print_new_features = true;                                            % fo
 debug.print_lsqnonlin = false;
 
 %********* plot parameters ************
+plotParams.record_video = false; 
+plotParams.video_framerate = 3; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true; 
 
@@ -316,22 +318,22 @@ switch(ds)
         processFrame.localization.numTrials = 3;
         
         % ransac inside of runP3PandRANSAC
-        processFrame.p3p_ransac.num_iteration = 1000;
+        processFrame.p3p_ransac.num_iteration = 300;
         processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 8;
         processFrame.p3p.max_delta_loc = 10;                                % max allowed step in loc
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
-        processFrame.triang.rep_e_threshold = 10;                           %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.rep_e_threshold = 20;                           %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
-        processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
+        processFrame.triang.min_distance_threshold = 0.1;                   % min z-distance in front of cam (not scaled)  
         processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
         processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 0.5;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
+        processFrame.triang.num_landmarks_margin = 0.7;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
             
         % detect new candidate kp
-        processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
+        processFrame.max_candidate_keypoints = 500;                        %no new keypoints are added if above max 
         processFrame.det_method = bootstrap.det_method;
             
         % harris
@@ -342,7 +344,7 @@ switch(ds)
         processFrame.select_by_nonMax = true;
         
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 6;                            % online: 8
+        processFrame.select_keypoints.delta = 8;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 500;
         processFrame.select_keypoints.viaMatrix_method = true;              %true for matrix filling approach, false for keypoints_loc method    
         processFrame.select_keypoints.sparseMatrix = true;                  %use sparse matrix, only useful if viaMatrix_method==true
