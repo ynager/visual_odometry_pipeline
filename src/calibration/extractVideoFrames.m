@@ -1,4 +1,4 @@
-function extractVideoFrames(video_path, images_dir, image_prefix, n, scale)
+function extractVideoFrames(video_path, images_dir, n, scale)
 % Extracts every n'th frame from a video at 'video_path' and saves 
 % them in 'images_dir' named with the given 'image_prefix'
 % before saving, images are resized by a scaling factor 'scale'
@@ -19,13 +19,19 @@ vid=VideoReader(video_path);
 
 iFrame = 0;
 nFrame = 0; 
+fprintf('Extracting'); 
 while hasFrame(vid)
   frames = readFrame(vid);
   
   if mod(iFrame, n) == 0
     frames = imresize(frames,scale); 
     imwrite(frames, fullfile(images_dir, sprintf('img_%05d.png', nFrame)));
-    nFrame = nFrame + 1; 
+    nFrame = nFrame + 1;
+    
+    if mod(nFrame,5) == 0 
+     fprintf('.'); 
+    end
+    
   end
   
   iFrame = iFrame + 1;
