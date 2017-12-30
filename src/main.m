@@ -61,7 +61,7 @@ elseif ds == 2
 elseif ds == 3
     
     last_frame = 100; 
-    ground_truth = []; 
+    ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');
     
 else
@@ -81,7 +81,7 @@ globalData.debug.ckeypoints_invalid = [];
 
 
 %put ground truth info into a realVSet
-for i = 1:length(ground_truth)
+for i = 1:size(ground_truth,1)
     globalData.actualVSet = addView(globalData.actualVSet, i, ...
        'Orientation', eye(3), 'Location', [ground_truth(i,1), 0, ground_truth(i,2)]);
 end
@@ -165,7 +165,7 @@ for i = range
     pause(0.1)
     
     %update scale factor every now and then
-    if(mod(i,10) == 0)
+    if(mod(i,10) == 0 && globalData.actualVSet.NumViews >= i)
         globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
     end
 end

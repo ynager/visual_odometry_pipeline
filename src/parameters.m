@@ -251,7 +251,7 @@ switch(ds)
         % BOOTSTRAP images
         bootstrap.init.numTrials = 100;                                     % NO TUNING bootstrap init nbr trials (run bootstrap max numTrial times)
         bootstrap.init.first_location = [0, 0, 1];                          % bootstrap is accepted if close to this location
-        bootstrap.images = [1,3];                                           % used bootstrap frames
+        bootstrap.images = [1,4];                                           % used bootstrap frames
         
         % feature detection method
         bootstrap.det_method = 'harris';                                    % harris or fast, feature detection method        
@@ -288,8 +288,8 @@ switch(ds)
         % estimate fundamental matrix (eFm)
         bootstrap.eFm.numTrials = 20;                                      %nbr of estimateFundamentalMatrix runs
         bootstrap.eFm.ransac.numTrials = 1000;                             %ransac inside of estimateFundamentalMatrix
-        bootstrap.eFm.ransac.distanceThreshold = 0.05; 
-        bootstrap.eFm.ransac.inlierRatio = 0.7;
+        bootstrap.eFm.ransac.distanceThreshold = 0.6;                      % LARGER THAN OTHER DATASETS
+        bootstrap.eFm.ransac.inlierRatio = 0.7;                            
              
         % landmark filter
         bootstrap.triang.radius_threshold = 60;

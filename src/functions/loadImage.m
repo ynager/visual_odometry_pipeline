@@ -16,7 +16,10 @@ function undist_image = loadImage(ds, i, cameraParams)
         assert(false);
     end
    
-    % undist img
-    undist_image = undistortImage(image, cameraParams);
+    % transform back to fulfil stupid matlab convention of K
+    cp = cameraParameters('IntrinsicMatrix', cameraParams.IntrinsicMatrix', ...
+                          'RadialDistortion', cameraParams.RadialDistortion, ...
+                          'TangentialDistortion', cameraParams.TangentialDistortion); 
+    undist_image = undistortImage(image, cp);
     
 end
