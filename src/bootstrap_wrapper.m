@@ -166,7 +166,7 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...
-        getFilteredLandmarks(xyzPoints, reprojectionErrors, orient, loc,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap);
+        getFilteredLandmarks(xyzPoints, inlierPoints_1.Location, reprojectionErrors, orient, loc,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap, cameraParams);
 
     inlierPoints_0 = inlierPoints_0(ind_filt);
     inlierPoints_1 = inlierPoints_1(ind_filt);

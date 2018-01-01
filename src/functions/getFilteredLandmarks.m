@@ -1,4 +1,4 @@
-function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoints, reprError, R, T, max_radius, min_distance_threshold, rep_e_threshold, num_landmarks)
+function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoints, keypoints, reprError, R, T, max_radius, min_distance_threshold, rep_e_threshold, num_landmarks, cameraParams)
 % Filters triangulated landmarks such that only a number of num_landmarks 
 % survive that lie within max_radius from the current camera pose and do 
 % not lie behind the camera
@@ -25,13 +25,36 @@ ind_valid = find(~invalid);
 %get ratio of useful landmarks
 ratio = length(ind_valid)/length(invalid);
 
+n_bins = 10;
+max_landmarks_per_bin = 10; 
+edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
+edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
+
+ind_filt = []; 
+
+Cx = discretize(keypoints(ind_valid,1), edges_x); 
+Cy = discretize(keypoints(ind_valid,2), edges_y);
+min_error_ind = []; 
+for i = 1:n_bins
+    for j = 1:n_bins
+        ind_box = find(and(Cx == i, Cy == j));
+        n_in_box = length(ind_box); 
+        n_landmarks = max_landmarks_per_bin - n_in_box;
+        if(n_landmarks > 0)
+            [~,minind] = mink(reprError(ind_box), n_landmarks,1);
+            min_error_ind = [min_error_ind, ind_box(minind)'];
+        end
+    end
+end
+
+
 %get k elements with lowest reprError that do fulfil above condition
-[~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
+%[~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
 fprintf('# selected %d landmarks. %d was target.\n\n', length(min_error_ind), num_landmarks ); 
 
 %get final filtered indices and landmarks
-ind_filt = ind_valid(min_error_ind); 
 
+ind_filt = ind_valid(min_error_ind); 
 xyzpoints = xyzpoints(ind_filt,:); 
 end
 
