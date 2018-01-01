@@ -6,6 +6,9 @@ function undist_image = loadImage(ds, i, cameraParams)
     if ds == 0
         image = imread(['../datasets/kitti/00/image_0/' sprintf('%06d.png',i)]);
     elseif ds == 1
+        images = dir(['../datasets/malaga' ...
+            '/malaga-urban-dataset-extract-07_rectified_800x600_Images']);
+        left_images = images(3:2:end);
         image = rgb2gray(imread(['../datasets/malaga/malaga-urban-dataset-extract-07_rectified_800x600_Images/' ...
             left_images(i).name]));
     elseif ds == 2

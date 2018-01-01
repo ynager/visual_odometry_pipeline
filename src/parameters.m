@@ -1,7 +1,7 @@
 % Parameters File
 
 %********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1)
-ds = 0;
+ds = 1;
 
 %********* debugging (printouts) *********
 debug.print_tracking = true;                                                %for Tracking in processFrame
@@ -15,7 +15,7 @@ debug.print_lsqnonlin = false;
 debug.keyboard_interrupt = false; 
 
 %********* plot parameters ************
-plotParams.record_video = false; 
+plotParams.record_video = true; 
 plotParams.video_framerate = 3; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true;
@@ -130,6 +130,68 @@ processFrame.harris.num_points = 600;
 %***********PARAMETER DATASET SPECIFIC**************
         
 switch(ds)
+    
+        %*********************************************************************
+    %******  MALAGA  ****************************************************    
+    case 1
+        
+        %*********** BOOTSTRAP ******************************************
+        
+        % BOOTSTRAP images
+        bootstrap.init.first_location = [-0.2, 0.2, 1];                          % bootstrap is accepted if close to this location
+        bootstrap.init.first_location = bootstrap.init.first_location./norm(bootstrap.init.first_location);
+        bootstrap.images = [1,3];                                           % used bootstrap frames
+        
+        % feature detection method
+        bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
+            
+        % nonMaxSupression
+        bootstrap.select_keypoints.delta = 6;  %TUNE                        % online: 8
+        bootstrap.select_keypoints.nbr_pts = 800; %TUNE                    
+                
+        % KLT method             
+        bootstrap.klt.MaxBidirectionalError = 0.3;                          %5 % if inf, is not calculated
+                
+        % estimate fundamental matrix (eFm)
+        bootstrap.eFm.ransac.numTrials = 1000;                             %ransac inside of estimateFundamentalMatrix
+        bootstrap.eFm.ransac.distanceThreshold = 0.6;                      % LARGER THAN OTHER DATASETS
+        bootstrap.eFm.ransac.inlierRatio = 0.7;                            
+             
+        % landmark filter
+        bootstrap.triang.radius_threshold = 60;
+        bootstrap.triang.min_distance_threshold = 2; 
+        bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
+        bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
+        
+        %*********** PROCESS FRAME ****************************************
+
+        % isClose fct
+        processFrame.is_close.delta = 6; %TUNE
+
+        % ransac inside of runP3PandRANSAC
+        processFrame.p3p_ransac.num_iteration = 300;
+        processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
+        processFrame.p3p_ransac.min_inlier = 8;
+
+        % triangulation
+        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
+        processFrame.triang.rep_e_threshold = 20;                           %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
+        processFrame.triang.min_distance_threshold = 0.1;                   % min z-distance in front of cam (not scaled)  
+        processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
+        processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
+        processFrame.triang.num_landmarks_margin = 0.7;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
+            
+        % detect new candidate kp
+        processFrame.max_candidate_keypoints = 800;                        %no new keypoints are added if above max 
+            
+        % harris
+        processFrame.harris.min_quality_process = 1e-4;
+        processFrame.harris.filter_size = 5;                                %must be odd
+
+        % nonMaxSupression
+        processFrame.select_keypoints.delta = 15;                            % online: 8
+        processFrame.select_keypoints.nbr_pts = 500;
    
     %*********************************************************************
     %******  PARKING  ****************************************************    
@@ -170,6 +232,7 @@ switch(ds)
         % ransac inside of runP3PandRANSAC
         processFrame.p3p_ransac.num_iteration = 1000;
         processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
+        processFrame.p3p_ransac.min_inlier = 8;
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
