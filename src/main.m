@@ -44,6 +44,7 @@ elseif ds == 1
     % create cameraParams object
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     clear K;
+    cameraParams.ImageSize = [600, 800];
     
     %no ground truth available
     ground_truth = [0, 0];

@@ -173,7 +173,7 @@ switch(ds)
         processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 8;
         processFrame.p3p_ransac.middle_image = [400, 300]; % [U V]
-        processFrame.p3p_ransac.r_threshold = 250; %in pix
+        processFrame.p3p_ransac.r_threshold = 10;% 250; %in pix
         processFrame.p3p_ransac.r_ratio_out = 0.20; % in '%'
 
         % triangulation
