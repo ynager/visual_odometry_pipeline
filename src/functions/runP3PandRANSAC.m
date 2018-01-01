@@ -62,8 +62,18 @@ for i = 1:num_iterations
         t_C_W = t_C_W_guess(:,:,2);
     end
     
+    % test if inliers are not mainly in imagecenter
+    valid_ratio = false;
+    inlier_kp = kp_for_p3p(is_inlier,:)';
+    radius2D = abs(inlier_kp - processFrame.p3p_ransac.middle_image');
+    r_out = (radius2D(1,:).^2+radius2D(2,:).^2) > processFrame.p3p_ransac.r_threshold^2;
+    if nnz(r_out)/length(r_out) > processFrame.p3p_ransac.r_ratio_out
+        valid_ratio = true;
+    end
+    
     if nnz(is_inlier) > max_num_inliers && ...
-            nnz(is_inlier) >= min_inlier_count
+            nnz(is_inlier) >= min_inlier_count && ...
+                valid_ratio
         max_num_inliers = nnz(is_inlier);        
         inlier_valid = is_inlier;
         orient_C_W = R_C_W;
