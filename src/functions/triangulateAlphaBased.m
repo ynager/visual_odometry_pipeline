@@ -86,10 +86,11 @@ num_new_landmarks = ceil(offset + (processFrame.triang.num_landmarks_goal - leng
 
 % filter landmarks to get only the best num_landmarks inside
 unfiltered_landmarks = unfiltered_landmarks(alpha_ok,:); 
+unfiltered_keypoints = currState.candidate_kp(alpha_ok,:); 
 reprojection_errors = reprojection_errors(alpha_ok); 
 
 [xyzPoints_filt, ind_filt, ind_invalid, ratio] = ... 
-    getFilteredLandmarks(unfiltered_landmarks, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, num_new_landmarks);    
+    getFilteredLandmarks(unfiltered_landmarks, unfiltered_keypoints, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, num_new_landmarks, cameraParams);    
 
 % get indices relative to total array back
 ind_alpha_ok = find(alpha_ok);

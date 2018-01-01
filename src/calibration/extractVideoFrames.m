@@ -5,7 +5,7 @@ function extractVideoFrames(video_path, images_dir, n, scale)
 
 % check if stuff exists
 if(~exist(video_path, 'file'))
-    warning('Specified video file does not exist! '); 
+    error('Specified video file does not exist! '); 
     return
 end
 if(~exist(images_dir, 'dir'))
@@ -30,6 +30,8 @@ while hasFrame(vid)
     
     if mod(nFrame,5) == 0 
      fprintf('.'); 
+     fig = imshow(frames);
+     pause(0.01); 
     end
     
   end
@@ -37,6 +39,7 @@ while hasFrame(vid)
   iFrame = iFrame + 1;
   
 end 
-fprintf('\nSuccesfully saved %d frames to %s\n\n',[nFrame, images_dir]); 
+fprintf('\nSuccesfully saved %d frames to %s\n\n',[nFrame, images_dir]);
+close(fig); 
 end
 

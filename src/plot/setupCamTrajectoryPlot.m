@@ -12,9 +12,9 @@ set(gcf,'units','points','position',[400,100,900,400],'color','w');
 %************************************************************************
 if plotParams.record_video
     mkdir media; 
-    plotHandles.writerObj = VideoWriter('media/vis_od.avi'); 
+    plotHandles.writerObj = VideoWriter('media/vis_od.mp4'); 
     plotHandles.writerObj.FrameRate = plotParams.video_framerate;
-    plotHandles.writerObj.Quality = 80; 
+    plotHandles.writerObj.Quality = 70; 
     open(plotHandles.writerObj);
     disp('Video Recording: On'); 
 end

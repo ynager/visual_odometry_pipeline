@@ -16,7 +16,7 @@ addpath('functions/triangulation')
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
     kitti_path = '../datasets/kitti';
-    assert(exist('../datasets/kitti', 'dir') ~= 0, 'Kitti dataset notii found');
+    assert(exist('../datasets/kitti', 'dir') ~= 0, 'Kitti dataset not found');
     ground_truth = load([kitti_path '/poses/00.txt']);
     ground_truth = ground_truth(:, [end-8 end]);
     last_frame = 4540;
@@ -26,6 +26,7 @@ if ds == 0
     
     % create cameraParams object
     cameraParams = cameraParameters('IntrinsicMatrix', K);
+    cameraParams.ImageSize = [376, 1241]; 
     clear K;
     
 elseif ds == 1
@@ -61,14 +62,12 @@ elseif ds == 2
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     clear K;
     
-elseif ds == 3
+else
     
-    last_frame = 260; 
+    last_frame = 1700; 
     ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');
     
-else
-    assert(false);
 end
 
 %create global data object
@@ -107,9 +106,6 @@ for i = 1:bootstrap.init.numTrials
     fprintf('\n\nDEBUGGER>> BOOTSTRAP failed, run again\n\n'); 
      
 end
-
-% get the scale factor from ground truth
-%globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
 
 %% Setup Camera/Trajectory plot
 plotHandles = setupCamTrajectoryPlot(globalData); 
@@ -169,11 +165,13 @@ for i = range
     
     %update scale factor every now and then
     if(mod(i,10) == 0 && globalData.actualVSet.NumViews >= i)
-        globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
+       globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
     end
 end
 
-close(plotHandles.writerObj); 
+if plotParams.record_video
+    close(plotHandles.writerObj); 
+end
 load handel.mat
 sound(y);
     
