@@ -1,7 +1,7 @@
 % Parameters File
 
 %********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1)
-ds = 1;
+ds = 0;
 
 %********* debugging (printouts) *********
 debug.print_tracking = true;                                                %for Tracking in processFrame
@@ -15,7 +15,7 @@ debug.print_lsqnonlin = false;
 debug.keyboard_interrupt = false; 
 
 %********* plot parameters ************
-plotParams.record_video = true; 
+plotParams.record_video = false; 
 plotParams.video_framerate = 3; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true;
@@ -297,15 +297,15 @@ switch(ds)
         bootstrap.eFm.ransac.inlierRatio = 0.7;
              
         % landmark filter
-        bootstrap.triang.radius_threshold = 60;
-        bootstrap.triang.min_distance_threshold = 2; 
+        bootstrap.triang.radius_threshold = 200;
+        bootstrap.triang.min_distance_threshold = 1; 
         bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
         
         %*********** PROCESS FRAME ****************************************
         
         % isClose fct
-        processFrame.is_close.delta = 10; %TUNE
+        processFrame.is_close.delta = 8; %TUNE
         
         % ransac inside of runP3PandRANSAC
         processFrame.p3p_ransac.num_iteration = 1000;
@@ -313,24 +313,24 @@ switch(ds)
         processFrame.p3p_ransac.min_inlier = 3;
 
         % triangulation
-        processFrame.triang.alpha_threshold = [deg2rad(2), deg2rad(60)];    % 20 init
-        processFrame.triang.rep_e_threshold = 50;                           %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(60)];    % 20 init
+        processFrame.triang.rep_e_threshold = 1.5;                           %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 200;                         % max allowable radius from cam (not scaled) 
-        processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
-        processFrame.triang.num_landmarks_goal = 80;                       % average number of landmarks to achieve
+        processFrame.triang.min_distance_threshold = 3;                     % min z-distance in front of cam (not scaled)  
+        processFrame.triang.num_landmarks_goal = 70;                       % average number of landmarks to achieve
         processFrame.triang.excess_num_landmarks = 80;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 0.8;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
+        processFrame.triang.num_landmarks_margin = 1;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
             
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 1000;                        %no new keypoints are added if above max 
             
         % harris
-        processFrame.harris.min_quality_process = 1e-7;
+        processFrame.harris.min_quality_process = 1e-4;
         processFrame.harris.filter_size = 7;                                %must be odd
 
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 15;                           % online: 8
-        processFrame.select_keypoints.nbr_pts = 400;
+        processFrame.select_keypoints.delta = 10;                           % online: 8
+        processFrame.select_keypoints.nbr_pts = 200;
         
     %*********************************************************************
     %******  CUSTOM_1  ****************************************************    
