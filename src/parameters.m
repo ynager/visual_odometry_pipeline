@@ -134,8 +134,10 @@ processFrame.reboot.stepsize = 3;                                   %bootstrap o
 processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
 processFrame.reboot.triang.radius_threshold = 60;
 processFrame.reboot.triang.min_distance_threshold = 2;
+processFrame.reboot.triang.rep_e_threshold = inf;
 processFrame.reboot.triang.min_landmark_ratio = 0.30;
 processFrame.reboot.triang.usegrid = false;
+processFrame.reboot.triang.max_landmarks_per_bin = 10;
 
 %***********PARAMETER DATASET SPECIFIC**************
         

@@ -7,7 +7,6 @@ function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoi
 max_radius = triangparams.radius_threshold;
 min_distance_threshold = triangparams.min_distance_threshold;
 rep_e_threshold = triangparams.rep_e_threshold;  
-max_landmarks_per_bin = triangparams.max_landmarks_per_bin;
 
 %translate and rotate points into camera frame
 c_points = (R')*(xyzpoints')-(R')*T;
@@ -32,6 +31,8 @@ ind_valid = find(~invalid);
 ratio = length(ind_valid)/length(invalid);
 
 if triangparams.usegrid
+    max_landmarks_per_bin = triangparams.max_landmarks_per_bin;
+    
     n_bins = 10;
     edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
     edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
