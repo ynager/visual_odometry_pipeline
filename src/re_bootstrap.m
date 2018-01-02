@@ -152,7 +152,8 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
     
     processFrame.reboot.triang.rep_e_threshold = bootstrap.triang.rep_e_threshold;
-    processFrame.reboot.triang.max_landmars_per_bin = bootstrap.triang.max_landmarks_per_bin; 
+    processFrame.reboot.triang.max_landmarks_per_bin = bootstrap.triang.max_landmarks_per_bin; 
+
     
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...

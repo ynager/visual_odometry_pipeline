@@ -16,7 +16,7 @@ debug.keyboard_interrupt = false;
 
 %********* plot parameters ************
 plotParams.record_video = true; 
-plotParams.video_framerate = 3; 
+plotParams.video_framerate = 5; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true;
 
@@ -299,59 +299,58 @@ switch(ds)
         bootstrap.images = [1,3];                                           % used bootstrap frames
         
         % feature detection method
-        bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
+        bootstrap.harris.min_quality = 1e-6; %TUNE                          % 0.001 init
 
         % nonMaxSupression
-        bootstrap.select_keypoints.delta = 6;  %TUNE                        % online: 8
+        bootstrap.select_keypoints.delta = 3;  %TUNE                        % online: 8
         bootstrap.select_keypoints.nbr_pts = 800; %TUNE                    
                 
         % KLT method                                          
-        bootstrap.klt.MaxBidirectionalError = 0.5 ;                          %5 % if inf, is not calculated
+        bootstrap.klt.MaxBidirectionalError = 0.3 ;                         %5 % if inf, is not calculated
 
         % estimate fundamental matrix (eFm)
         bootstrap.eFm.ransac.numTrials = 1000;                             %ransac inside of estimateFundamentalMatrix
-        bootstrap.eFm.ransac.distanceThreshold = 0.05; 
+        bootstrap.eFm.ransac.distanceThreshold = 0.7; 
         bootstrap.eFm.ransac.inlierRatio = 0.7;
              
         % landmark filter
-        bootstrap.triang.radius_threshold = 200;
+        bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 1; 
         bootstrap.triang.max_landmarks_per_bin = 20; 
-        bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
+        bootstrap.triang.min_landmark_ratio = 0.60; %0.72;                 % LOOP in bootstrap
         
         %*********** PROCESS FRAME ****************************************
         
         % isClose fct
-        processFrame.is_close.delta = 6; %TUNE
+        processFrame.is_close.delta = 10; %TUNE
         
         % ransac inside of runP3PandRANSAC
         processFrame.p3p_ransac.num_iteration = 1000;
-        processFrame.p3p_ransac.pixel_tolerance = 1;                        % 2 init, better
+        processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 3;
 
         % triangulation
-        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(60)];    % 20 init
-        processFrame.triang.rep_e_threshold = 2;                           %init 3 % max allowed reprojection error in triangulation
-        processFrame.triang.radius_threshold = 200;                         % max allowable radius from cam (not scaled) 
-        processFrame.triang.min_distance_threshold = 3;                     % min z-distance in front of cam (not scaled)  
+        processFrame.triang.alpha_threshold = [deg2rad(2), deg2rad(60)];   % 20 init
+        processFrame.triang.rep_e_threshold = 20;                          %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 60;                         % max allowable radius from cam (not scaled) 
+        processFrame.triang.min_distance_threshold = 3;                    % min z-distance in front of cam (not scaled)  
         processFrame.triang.max_landmarks_per_bin = 10; 
-        processFrame.triang.min_landmarks_threshold = 40;                   % triangulate again when #landmarks < min_landmarks_threshold
+        processFrame.triang.min_landmarks_threshold = 100;                 % triangulate again when #landmarks < min_landmarks_threshold
 
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 1000;                        %no new keypoints are added if above max 
             
         % harris
-        processFrame.harris.min_quality_process = 1e-4;
-        processFrame.harris.filter_size = 7;                                %must be odd
+        processFrame.harris.min_quality_process = 1e-5;
 
         % nonMaxSupression
         processFrame.select_keypoints.delta = 15;                           % online: 8
-        processFrame.select_keypoints.nbr_pts = 300;
+        processFrame.select_keypoints.nbr_pts = 200;
         
-        processFrame.reboot.landmark_trigger = 20;
+        processFrame.reboot.landmark_trigger = 30;
         processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
         processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
-        processFrame.reboot.triang.radius_threshold = 250;
+        processFrame.reboot.triang.radius_threshold = 200;
         processFrame.reboot.triang.min_distance_threshold = 2;
         processFrame.reboot.triang.min_landmark_ratio = 0.30;
         
