@@ -141,6 +141,11 @@ initialize(KLT_candidateKeypointsTracker, currState.candidate_kp, I_curr);
                             
 % Estimate remaining camera trajectory
 range = (bootstrap.images(2)+1):last_frame;
+
+% for re-bootstrap
+global RE_BOOTSTRAP
+RE_BOOTSTRAP = false;
+
 for i = range
     
     % update to current frame
@@ -148,11 +153,29 @@ for i = range
     I_curr = loadImage(ds,i, cameraParameters);
     
     % get current state (containing all state info) and current pose
-    [currState, currRT, globalData] = processFrame_wrapper(I_curr, prevState, ...
-                                        KLT_keypointsTracker, ...
-                                        KLT_candidateKeypointsTracker, ...
-                                        cameraParams, globalData);
-  
+    
+%     %deeebuuuuug
+%     if mod(i,8)==0
+%         RE_BOOTSTRAP=true;
+%     end
+    
+    if not(RE_BOOTSTRAP)
+        [currState, currRT, globalData] = processFrame_wrapper(I_curr, prevState, ...
+                                            KLT_keypointsTracker, ...
+                                            KLT_candidateKeypointsTracker, ...
+                                            cameraParams, globalData);
+    else
+        %get base info
+        I_base = loadImage(ds,i-processFrame.reboot.stepsize, cameraParameters);
+        base_orient = globalData.vSet.Views.Orientation{end-(processFrame.reboot.stepsize-1)};
+        base_loc = globalData.vSet.Views.Location{end-(processFrame.reboot.stepsize-1)}';
+        % re-bootstrap
+        [currState, currRT, globalData] = re_bootstrap(I_base, base_orient, base_loc, I_curr, prevState, ...
+                                            KLT_keypointsTracker, ...
+                                            KLT_candidateKeypointsTracker, ...
+                                            cameraParams, globalData);
+        RE_BOOTSTRAP = false;
+    end
                                                
     viewId = i - bootstrap.images(2) + 2; 
     globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4)', 'Points', currState.keypoints);

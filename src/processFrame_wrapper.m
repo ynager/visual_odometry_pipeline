@@ -187,6 +187,12 @@ setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);
 % printout
 fprintf('\nEnd of step. Numbers of keypoints: %d',length(currState.keypoints));
 
+% re-bootstrap?
+if length(currState.keypoints) < processFrame.reboot.landmark_trigger
+    global RE_BOOTSTRAP
+    RE_BOOTSTRAP = true;
+end
+
 
 %% Fill up debut plotting data
 % get p3p outlier keypoints and landmarks

@@ -127,6 +127,14 @@ processFrame.select_keypoints.sparseMatrix = true;                  %use sparse 
 % selectUniform
 processFrame.harris.num_points = 600;
 
+% re-bootstrap
+processFrame.reboot.landmark_trigger = 150;
+processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
+processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
+processFrame.reboot.triang.radius_threshold = 60;
+processFrame.reboot.triang.min_distance_threshold = 2;
+processFrame.reboot.triang.min_landmark_ratio = 0.30;
+
 %***********PARAMETER DATASET SPECIFIC**************
         
 switch(ds)
@@ -176,7 +184,7 @@ switch(ds)
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
         processFrame.triang.rep_e_threshold = 20;                           %init 3 % max allowed reprojection error in triangulation
-        processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
+        processFrame.triang.radius_threshold = 60;                         % max allowable radius from cam (not scaled) 
         processFrame.triang.min_distance_threshold = 10;                   % min z-distance in front of cam (not scaled)  
         processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
         processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
@@ -192,6 +200,15 @@ switch(ds)
         % nonMaxSupression
         processFrame.select_keypoints.delta = processFrame.is_close.delta;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 500;
+        
+        % re-bootstrap
+        processFrame.reboot.landmark_trigger = 40;
+        processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
+        processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
+        processFrame.reboot.triang.radius_threshold = 60;
+        processFrame.reboot.triang.min_distance_threshold = 2;
+        processFrame.reboot.triang.min_landmark_ratio = 0.30;
+
    
     %*********************************************************************
     %******  PARKING  ****************************************************    

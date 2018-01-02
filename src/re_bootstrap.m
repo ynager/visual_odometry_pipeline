@@ -1,30 +1,9 @@
-function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globalData)
-%BOOTSTRAP Estimating the pose of the second view relative to the first view.
-%Estimate the pose of the second view by estimating the essential matrix and
-%decomposing it into camera location and orientation. Triangulation of
-%landmarks.
-%
-%   input:
-%       camearParams: Object for storing camera parameters
-%           -> (nbr_pts_in_ptcloud x 3) Matrix: [x y z;...]
-%       globalData: Object containing actual and estimated viewSets and
-%
-%   output:
-%       viewId: viewID
-%       globalData: updated globalData
-%       currState: struct containing first state of camera
-%           currState.keypoints:
-%               denoted as P in pdf -> (nbr_kp x 2) Matrix: [u_hor v_vert;...]
-%           currState.landmarks:
-%               denoted as X in pdf -> (nbr_lm x 3) Matrix: [x y z;...]
-%           currState.candidate_kp:
-%               candidate keypoint, denoted as C in pdf
-%               -> (nbr_ckp x 2) Matrix: [u_hor v_vert;...]
-%           currState.first_obs:
-%               first observation of track of keypoint, denoted as F in pdf
-%               -> (nbr_ckp x 2) Matrix: [u_hor v_vert;...]
-%           currState.pose_first_obs: pose of first observation above, denoted as T in pdf
-%               -> (nbr_ckp x 12) Matrix: [orientation(:)'loc(:)';...]
+function [currState, currRT, globalData] = re_bootstrap(I_base, base_orient, base_loc, I_curr, prevState, ...
+                                            KLT_keypointsTracker, ...
+                                            KLT_candidateKeypointsTracker, ...
+                                            cameraParams, globalData)
+%RE_BOOTSTRAP is like bootstrap but within processFrame, updates the processFrame constructs as well
+% code copied from bootstrap (and process frame)
 
 %% source code
 
@@ -32,8 +11,8 @@ function [currState, globalData, viewId] = bootstrap_wrapper(cameraParams, globa
 run('parameters.m');
 
 % load undistorted images
-I_0 = loadImage(ds,bootstrap.images(1), cameraParams);
-I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
+I_0 = I_base;
+I_1 = I_curr;
 
 % Detect feature points
 switch bootstrap.det_method
@@ -119,7 +98,7 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
 
         % Make sure we get enough inliers
         ratio = sum(inlierIdx) / numel(inlierIdx); 
-        if(ratio > bootstrap.eFm.ransac.inlierRatio)
+        if(ratio > processFrame.reboot.eFm.ransac.inlierRatio)
             fprintf('Fraction of inliers for F: %.2f',ratio);
             break;
         elseif i==bootstrap.eFm.numTrials
@@ -148,30 +127,38 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
 
     fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
     
-    %TODO put in a safety measurement? like count pts in front of cam?
+    %% re-bootstrap part
+    % scale up loc by number of skipped frames
+    scale_factor = processFrame.reboot.stepsize/abs(bootstrap.images(2)-bootstrap.images(1));
+    loc = loc*scale_factor;
+    % calculate base to world frame
+    loc = base_loc + base_orient*loc;
+    orient = base_orient*orient;
 
     %% Triangulate to get 3D points
 
     % get rotation matrix and translation vector from pose orientation and location    
     % swap frames, from WC to CW
-    R = orient';
-    t = -R*loc;
+    R1 = base_orient';
+    t1 = -R1*base_loc;
+    R2 = orient';
+    t2 = -R2*loc;
 
     % calculate camera matrices
-    M1 = cameraParams.IntrinsicMatrix * eye(3,4); 
-    M2 = cameraParams.IntrinsicMatrix * [R, t];
+    M1 = cameraParams.IntrinsicMatrix * [R1, t1]; 
+    M2 = cameraParams.IntrinsicMatrix * [R2, t2];
 
     % triangulate
     [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
     
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...
-        getFilteredLandmarks(xyzPoints, inlierPoints_1.Location, reprojectionErrors, orient, loc,  bootstrap.triang.radius_threshold, bootstrap.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap, cameraParams);
+        getFilteredLandmarks(xyzPoints, inlierPoints_1.Location, reprojectionErrors, orient, loc,  processFrame.reboot.triang.radius_threshold, processFrame.reboot.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap, cameraParams);
 
     inlierPoints_0 = inlierPoints_0(ind_filt);
     inlierPoints_1 = inlierPoints_1(ind_filt);
 
-    if ratio>bootstrap.triang.min_landmark_ratio
+    if ratio>processFrame.reboot.triang.min_landmark_ratio
         fprintf('\nlandmarkfilter reached a ratio of %.2f. \n bootstrap was most likely successful',ratio); 
         break;
     else
@@ -205,25 +192,28 @@ currState.landmarks = xyzPoints;
 currState.candidate_kp = candidate_kp; 
 currState.first_obs = candidate_kp;
 currState.pose_first_obs = repmat([orient(:)', loc(:)'], [length(candidate_kp),1]);
+currRT = [orient loc];
 
+% finally update KLT_keypointsTracker and KLT_candidateKeypointsTracker
+[~,~] = step(KLT_keypointsTracker,I_curr);
+[~,~] = step(KLT_candidateKeypointsTracker,I_curr);
+setPoints(KLT_keypointsTracker,currState.keypoints);
+setPoints(KLT_candidateKeypointsTracker,currState.candidate_kp);
 
-%% populate viewsets
-viewId = 1; 
-globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', eye(3), 'Location', [0 0 0], 'Points', inlierPoints_0);
+%% Fill up debug plotting data
+% get p3p outlier keypoints and landmarks
+globalData.debug.p3p_outlier_keypoints = []; 
+globalData.debug.p3p_outlier_landmarks = [];
+globalData.debug.ckeypoints_invalid = [];
 
-viewId = 2;
-globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc', 'Points', inlierPoints_1);
-
-% Store the point matches between the previous and the current views.
-% globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
 
 %% update landmarks and actualVSet in globalData
-globalData.landmarks = xyzPoints; 
+globalData.landmarks = [globalData.landmarks; xyzPoints]; 
 
 %% Plotting
 
 %Plot bootstrap matches
-plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
+% plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
 
 end
 
