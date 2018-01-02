@@ -1,7 +1,7 @@
 % Parameters File
 
 %********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1)
-ds = 0;
+ds = 2;
 
 %********* debugging (printouts) *********
 debug.print_tracking = true;                                                %for Tracking in processFrame
@@ -15,7 +15,7 @@ debug.print_lsqnonlin = false;
 debug.keyboard_interrupt = false; 
 
 %********* plot parameters ************
-plotParams.record_video = false; 
+plotParams.record_video = true; 
 plotParams.video_framerate = 3; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true;
@@ -74,7 +74,7 @@ bootstrap.triang.min_distance_threshold = 2;
 bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
 bootstrap.triang.rep_e_threshold = inf; 
 bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
-bootstrap.triang.usegrid = true;
+bootstrap.triang.usegrid = false;
 
 % TODO: here params for candidate kp search in bootstrap
 bootstrap.is_close.delta = 6;                                      % currently meaningless
@@ -106,7 +106,7 @@ processFrame.triang.radius_threshold = 250;                         % max allowa
 processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
 processFrame.triang.max_landmarks_per_bin = 10; 
 processFrame.triang.min_landmarks_threshold = 60; 
-processFrame.triang.usegrid = bootstrap.triang.usegrid;
+processFrame.triang.usegrid = true;
 
 % detect new candidate kp
 processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
@@ -193,7 +193,7 @@ switch(ds)
         processFrame.triang.min_distance_threshold = 10;                   % min z-distance in front of cam (not scaled)  
         processFrame.triang.max_landmarks_per_bin = 10; 
         processFrame.triang.min_landmarks_threshold = 105;                 % triangulate again when #landmarks < min_landmarks_threshold
-        processFrame.triang.usegrid = bootstrap.triang.usegrid;
+        processFrame.triang.usegrid = false;
 
         
         % detect new candidate kp
@@ -214,6 +214,7 @@ switch(ds)
         processFrame.reboot.triang.radius_threshold = 80;
         processFrame.reboot.triang.min_distance_threshold = 2;
         processFrame.reboot.triang.min_landmark_ratio = 0.15;
+        processFrame.reboot.triang.usegrid = false;
 
    
     %*********************************************************************
@@ -246,6 +247,7 @@ switch(ds)
         bootstrap.triang.min_distance_threshold = 2; 
         bootstrap.triang.max_landmarks_per_bin = 10; 
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap                                   % currently meaningless
+        bootstrap.triang.usegrid = false;
         
         %*********** PROCESS FRAME ****************************************
 
@@ -264,6 +266,7 @@ switch(ds)
         processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
         processFrame.triang.min_landmarks_threshold = 80;                   % triangulate again when #landmarks < min_landmarks_threshold
         processFrame.triang.max_landmarks_per_bin = 10; 
+        processFrame.triang.usegrid = false;
         
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
@@ -275,6 +278,15 @@ switch(ds)
         % nonMaxSupression
         processFrame.select_keypoints.delta = 6;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 500;
+        
+        % re-bootstrap
+        processFrame.reboot.landmark_trigger = 15;
+        processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
+        processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
+        processFrame.reboot.triang.radius_threshold = 80;
+        processFrame.reboot.triang.min_distance_threshold = 1;
+        processFrame.reboot.triang.min_landmark_ratio = 0.50;
+        processFrame.reboot.triang.usegrid = false;
         
         %******************************************************************
         %******  KITTI  *************************************************** 
