@@ -31,7 +31,7 @@ ind_valid = find(~invalid);
 %get ratio of useful landmarks
 ratio = length(ind_valid)/length(invalid);
 
-if processFrame.triang.usegrid
+if triangparams.usegrid
     n_bins = 10;
     edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
     edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];

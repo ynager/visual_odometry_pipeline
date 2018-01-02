@@ -74,6 +74,7 @@ bootstrap.triang.min_distance_threshold = 2;
 bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
 bootstrap.triang.rep_e_threshold = inf; 
 bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
+bootstrap.triang.usegrid = true;
 
 % TODO: here params for candidate kp search in bootstrap
 bootstrap.is_close.delta = 6;                                      % currently meaningless
@@ -105,7 +106,7 @@ processFrame.triang.radius_threshold = 250;                         % max allowa
 processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
 processFrame.triang.max_landmarks_per_bin = 10; 
 processFrame.triang.min_landmarks_threshold = 60; 
-processFrame.triang.usegrid = true;
+processFrame.triang.usegrid = bootstrap.triang.usegrid;
 
 % detect new candidate kp
 processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
@@ -170,6 +171,7 @@ switch(ds)
         bootstrap.triang.min_distance_threshold = 2; 
         bootstrap.triang.max_landmarks_per_bin = 10; 
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
+        bootstrap.triang.usegrid = false;
         
         %*********** PROCESS FRAME ****************************************
 
@@ -188,7 +190,7 @@ switch(ds)
         processFrame.triang.min_distance_threshold = 10;                   % min z-distance in front of cam (not scaled)  
         processFrame.triang.max_landmarks_per_bin = 10; 
         processFrame.triang.min_landmarks_threshold = 105;                 % triangulate again when #landmarks < min_landmarks_threshold
-        processFrame.triang.usegrid = false;
+        processFrame.triang.usegrid = bootstrap.triang.usegrid;
 
         
         % detect new candidate kp
