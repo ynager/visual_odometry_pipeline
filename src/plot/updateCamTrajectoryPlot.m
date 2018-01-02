@@ -48,8 +48,8 @@ set(plotHandles.axes1,'Zlim',[loc(3)-50, loc(3)+50]);
 % axes 2 ****************************************************
 axes(plotHandles.axes2);   
 imshow(I); 
-num_inliers = length(globalData.vSet.Views.Points{viewId}); 
-title(['Number of inliers: ',num2str(num_inliers)]);
+num_landmarks = length(currState.landmarks); 
+title(['Number of landmarks: ',num2str(num_landmarks)]);
 hold on; 
 
 %draw points
