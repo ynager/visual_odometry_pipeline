@@ -103,9 +103,8 @@ processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
 processFrame.triang.rep_e_threshold = 10;                           %init 3 % max allowed reprojection error in triangulation
 processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
 processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
-processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
-processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
-processFrame.triang.num_landmarks_margin = 0.5;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
+processFrame.triang.max_landmarks_per_bin = 10; 
+processFrame.triang.min_landmarks_threshold = 60; 
 
 % detect new candidate kp
 processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
@@ -168,7 +167,7 @@ switch(ds)
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 
-        bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
+        bootstrap.triang.max_landmarks_per_bin = 10; 
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
         
         %*********** PROCESS FRAME ****************************************
@@ -183,13 +182,12 @@ switch(ds)
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
-        processFrame.triang.rep_e_threshold = 20;                           %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.rep_e_threshold = 20;                          %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 60;                         % max allowable radius from cam (not scaled) 
         processFrame.triang.min_distance_threshold = 10;                   % min z-distance in front of cam (not scaled)  
-        processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
-        processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 0.7;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
-            
+        processFrame.triang.max_landmarks_per_bin = 10; 
+        processFrame.triang.min_landmarks_threshold = 105;                 % triangulate again when #landmarks < min_landmarks_threshold
+
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 800;                        %no new keypoints are added if above max 
             
@@ -238,7 +236,7 @@ switch(ds)
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 
-        bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
+        bootstrap.triang.max_landmarks_per_bin = 10; 
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap                                   % currently meaningless
         
         %*********** PROCESS FRAME ****************************************
@@ -256,10 +254,9 @@ switch(ds)
         processFrame.triang.rep_e_threshold = 10;                           %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
         processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
-        processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
-        processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 0.5;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
-            
+        processFrame.triang.min_landmarks_threshold = 80;                   % triangulate again when #landmarks < min_landmarks_threshold
+        processFrame.triang.max_landmarks_per_bin = 10; 
+        
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
             
@@ -299,13 +296,13 @@ switch(ds)
         % landmark filter
         bootstrap.triang.radius_threshold = 200;
         bootstrap.triang.min_distance_threshold = 1; 
-        bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
+        bootstrap.triang.max_landmarks_per_bin = 20; 
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
         
         %*********** PROCESS FRAME ****************************************
         
         % isClose fct
-        processFrame.is_close.delta = 8; %TUNE
+        processFrame.is_close.delta = 6; %TUNE
         
         % ransac inside of runP3PandRANSAC
         processFrame.p3p_ransac.num_iteration = 1000;
@@ -314,13 +311,12 @@ switch(ds)
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(60)];    % 20 init
-        processFrame.triang.rep_e_threshold = 1.5;                           %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.rep_e_threshold = 2;                           %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 200;                         % max allowable radius from cam (not scaled) 
         processFrame.triang.min_distance_threshold = 3;                     % min z-distance in front of cam (not scaled)  
-        processFrame.triang.num_landmarks_goal = 70;                       % average number of landmarks to achieve
-        processFrame.triang.excess_num_landmarks = 80;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 1;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
-            
+        processFrame.triang.max_landmarks_per_bin = 10; 
+        processFrame.triang.min_landmarks_threshold = 40;                   % triangulate again when #landmarks < min_landmarks_threshold
+
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 1000;                        %no new keypoints are added if above max 
             
@@ -329,8 +325,15 @@ switch(ds)
         processFrame.harris.filter_size = 7;                                %must be odd
 
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 10;                           % online: 8
-        processFrame.select_keypoints.nbr_pts = 200;
+        processFrame.select_keypoints.delta = 15;                           % online: 8
+        processFrame.select_keypoints.nbr_pts = 300;
+        
+        processFrame.reboot.landmark_trigger = 20;
+        processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
+        processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
+        processFrame.reboot.triang.radius_threshold = 250;
+        processFrame.reboot.triang.min_distance_threshold = 2;
+        processFrame.reboot.triang.min_landmark_ratio = 0.30;
         
     %*********************************************************************
     %******  CUSTOM_1  ****************************************************    
@@ -360,7 +363,7 @@ switch(ds)
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 
-        bootstrap.triang.num_landmarks_bootstrap = 600; %TUNE
+        bootstrap.triang.max_landmarks_per_bin = 10;
         bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
         
         %*********** PROCESS FRAME ****************************************
@@ -378,9 +381,8 @@ switch(ds)
         processFrame.triang.rep_e_threshold = 20;                           %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
         processFrame.triang.min_distance_threshold = 0.1;                   % min z-distance in front of cam (not scaled)  
-        processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
-        processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
-        processFrame.triang.num_landmarks_margin = 0.7;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
+        processFrame.triang.max_landmarks_per_bin = 10;
+        processFrame.triang.min_landmarks_threshold = 70;                   % triangulate again when #landmarks < min_landmarks_threshold
             
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 1000;                        %no new keypoints are added if above max 

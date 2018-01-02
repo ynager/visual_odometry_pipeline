@@ -10,9 +10,9 @@ run('parameters.m');
 % set debug data to zero
 globalData.debug.ckeypoints_invalid = [0, 0];
 
-% check if current number of landmarks is larger than goal number * margin
-margin = processFrame.triang.num_landmarks_margin; 
-if(length(currState.landmarks) > margin*processFrame.triang.num_landmarks_goal)
+% check if current number of landmarks is larger than
+% min_landmarks_threshold
+if(length(currState.landmarks) > processFrame.triang.min_landmarks_threshold)
     return; 
 end
 
@@ -80,17 +80,13 @@ for i = 1:size(currState.pose_first_obs,1)
     end
 end
 
-% calculate how many new landmarks should be generated
-offset = processFrame.triang.excess_num_landmarks; 
-num_new_landmarks = ceil(offset + (processFrame.triang.num_landmarks_goal - length(currState.keypoints)));
-
 % filter landmarks to get only the best num_landmarks inside
 unfiltered_landmarks = unfiltered_landmarks(alpha_ok,:); 
 unfiltered_keypoints = currState.candidate_kp(alpha_ok,:); 
 reprojection_errors = reprojection_errors(alpha_ok); 
 
 [xyzPoints_filt, ind_filt, ind_invalid, ratio] = ... 
-    getFilteredLandmarks(unfiltered_landmarks, unfiltered_keypoints, reprojection_errors, R2, T2, processFrame.triang.radius_threshold, processFrame.triang.min_distance_threshold,processFrame.triang.rep_e_threshold, num_new_landmarks, cameraParams);    
+    getFilteredLandmarks(unfiltered_landmarks, unfiltered_keypoints, reprojection_errors, R2, T2, processFrame.triang, cameraParams);    
 
 % get indices relative to total array back
 ind_alpha_ok = find(alpha_ok);

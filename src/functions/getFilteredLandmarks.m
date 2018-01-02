@@ -1,7 +1,13 @@
-function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoints, keypoints, reprError, R, T, max_radius, min_distance_threshold, rep_e_threshold, num_landmarks, cameraParams)
+function [xyzpoints, ind_filt, ind_invalid, ratio] = getFilteredLandmarks(xyzpoints, keypoints, reprError, R, T, triangparams, cameraParams)
 % Filters triangulated landmarks such that only a number of num_landmarks 
 % survive that lie within max_radius from the current camera pose and do 
 % not lie behind the camera
+
+% get params
+max_radius = triangparams.radius_threshold;
+min_distance_threshold = triangparams.min_distance_threshold;
+rep_e_threshold = triangparams.rep_e_threshold;  
+max_landmarks_per_bin = triangparams.max_landmarks_per_bin;
 
 %translate and rotate points into camera frame
 c_points = (R')*(xyzpoints')-(R')*T;
@@ -26,7 +32,6 @@ ind_valid = find(~invalid);
 ratio = length(ind_valid)/length(invalid);
 
 n_bins = 10;
-max_landmarks_per_bin = 10; 
 edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
 edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
 edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
@@ -54,7 +59,7 @@ end
 
 %get k elements with lowest reprError that do fulfil above condition
 %[~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
-fprintf('# selected %d landmarks. %d was target.\n\n', length(min_error_ind), num_landmarks ); 
+fprintf('# selected %d from %d landmarks\n\n', length(min_error_ind), length(xyzpoints)); 
 
 %get final filtered indices and landmarks
 
