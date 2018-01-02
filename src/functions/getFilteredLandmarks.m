@@ -46,8 +46,8 @@ for i = 1:n_bins
             [~,kill_idx] = datasample(ind_box, abs(n_landmarks),'Replace',false);
             ind_box(kill_idx)=[];
 %             min_error_ind = [min_error_ind, ind_box(minind)'];
-            min_error_ind = [min_error_ind, ind_box'];
         end
+        min_error_ind = [min_error_ind, ind_box'];
     end
 end
 
