@@ -197,8 +197,13 @@ end
 if plotParams.record_video
     close(plotHandles.writerObj); 
 end
+
+%save globalData
+save([num2str(ds) '_globaldata'],'globalData')
+
 load handel.mat
 sound(y);
+
     
 %% Questions
 
