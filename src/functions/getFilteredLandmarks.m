@@ -25,8 +25,8 @@ ind_valid = find(~invalid);
 %get ratio of useful landmarks
 ratio = length(ind_valid)/length(invalid);
 
-n_bins = 3;
-max_landmarks_per_bin = 50; 
+n_bins = 10;
+max_landmarks_per_bin = 10; 
 edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
 edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
 edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
