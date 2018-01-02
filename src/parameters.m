@@ -135,6 +135,7 @@ processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
 processFrame.reboot.triang.radius_threshold = 60;
 processFrame.reboot.triang.min_distance_threshold = 2;
 processFrame.reboot.triang.min_landmark_ratio = 0.30;
+processFrame.reboot.triang.usegrid = false;
 
 %***********PARAMETER DATASET SPECIFIC**************
         
