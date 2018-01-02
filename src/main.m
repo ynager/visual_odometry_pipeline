@@ -62,6 +62,7 @@ elseif ds == 2
     % create cameraParams object
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     clear K;
+    cameraParams.ImageSize = [480, 640]; 
     
 else
     

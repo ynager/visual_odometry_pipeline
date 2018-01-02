@@ -228,7 +228,7 @@ switch(ds)
         bootstrap.images = [1,3];                                           % used bootstrap frames
         
         % feature detection method
-        bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
+        bootstrap.harris.min_quality = 1e-4; %TUNE                      % 0.001 init
             
         % nonMaxSupression
         bootstrap.select_keypoints.delta = 6;  %TUNE                        % online: 8                 %true for matrix filling approach, false for keypoints_loc method
@@ -239,14 +239,14 @@ switch(ds)
         
         % estimate fundamental matrix (eFm)
         bootstrap.eFm.ransac.numTrials = 1000;                             %ransac inside of estimateFundamentalMatrix
-        bootstrap.eFm.ransac.distanceThreshold = 0.05; 
+        bootstrap.eFm.ransac.distanceThreshold = 0.6; 
         bootstrap.eFm.ransac.inlierRatio = 0.7;
              
         % landmark filter
         bootstrap.triang.radius_threshold = 60;
         bootstrap.triang.min_distance_threshold = 2; 
         bootstrap.triang.max_landmarks_per_bin = 10; 
-        bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap                                   % currently meaningless
+        bootstrap.triang.min_landmark_ratio = 0.50; %0.72;                 % LOOP in bootstrap                                   % currently meaningless
         bootstrap.triang.usegrid = false;
         
         %*********** PROCESS FRAME ****************************************
@@ -255,24 +255,24 @@ switch(ds)
         processFrame.is_close.delta = 6; %TUNE
         
         % ransac inside of runP3PandRANSAC
-        processFrame.p3p_ransac.num_iteration = 1000;
+        processFrame.p3p_ransac.num_iteration = 300;
         processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 8;
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
-        processFrame.triang.rep_e_threshold = 10;                           %init 3 % max allowed reprojection error in triangulation
-        processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
+        processFrame.triang.rep_e_threshold = 4;                           %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 80;                         % max allowable radius from cam (not scaled) 
         processFrame.triang.min_distance_threshold = 1;                     % min z-distance in front of cam (not scaled)  
         processFrame.triang.min_landmarks_threshold = 80;                   % triangulate again when #landmarks < min_landmarks_threshold
         processFrame.triang.max_landmarks_per_bin = 10; 
-        processFrame.triang.usegrid = false;
+        processFrame.triang.usegrid = true;
         
         % detect new candidate kp
         processFrame.max_candidate_keypoints = 2000;                        %no new keypoints are added if above max 
             
         % harris
-        processFrame.harris.min_quality_process = 1e-6;
+        processFrame.harris.min_quality_process = 1e-4;
         processFrame.harris.filter_size = 5; 
         
         % nonMaxSupression
