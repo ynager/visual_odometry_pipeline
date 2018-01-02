@@ -25,40 +25,43 @@ ind_valid = find(~invalid);
 %get ratio of useful landmarks
 ratio = length(ind_valid)/length(invalid);
 
-n_bins = 10;
-max_landmarks_per_bin = 10; 
-edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
-edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
-edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
-edges_y = [edges_y(1:n_bins) cameraParams.ImageSize(1)];
-ind_filt = []; 
-
-Cx = discretize(keypoints(ind_valid,1), edges_x); 
-Cy = discretize(keypoints(ind_valid,2), edges_y);
-min_error_ind = []; 
-for i = 1:n_bins
-    for j = 1:n_bins
-        ind_box = find(and(Cx == i, Cy == j));
-        n_in_box = length(ind_box); 
-        n_landmarks = max_landmarks_per_bin - n_in_box;
-        if(n_landmarks < 0)
-%             [~,minind] = mink(reprError(ind_box), n_landmarks,1);
-            [~,kill_idx] = datasample(ind_box, abs(n_landmarks),'Replace',false);
-            ind_box(kill_idx)=[];
-%             min_error_ind = [min_error_ind, ind_box(minind)'];
-        end
-        min_error_ind = [min_error_ind, ind_box'];
-    end
-end
-
-
-%get k elements with lowest reprError that do fulfil above condition
-%[~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
-fprintf('# selected %d landmarks. %d was target.\n\n', length(min_error_ind), num_landmarks ); 
-
-%get final filtered indices and landmarks
-
-ind_filt = ind_valid(min_error_ind); 
+% % n_bins = 10;
+% % max_landmarks_per_bin = 10; 
+% % edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
+% % edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
+% % edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
+% % edges_y = [edges_y(1:n_bins) cameraParams.ImageSize(1)];
+% % ind_filt = []; 
+% % 
+% % Cx = discretize(keypoints(ind_valid,1), edges_x); 
+% % Cy = discretize(keypoints(ind_valid,2), edges_y);
+% % min_error_ind = []; 
+% % for i = 1:n_bins
+% %     for j = 1:n_bins
+% %         ind_box = find(and(Cx == i, Cy == j));
+% %         n_in_box = length(ind_box); 
+% %         n_landmarks = max_landmarks_per_bin - n_in_box;
+% %         if(n_landmarks < 0)
+% % %             [~,minind] = mink(reprError(ind_box), n_landmarks,1);
+% %             [~,kill_idx] = datasample(ind_box, abs(n_landmarks),'Replace',false);
+% %             ind_box(kill_idx)=[];
+% % %             min_error_ind = [min_error_ind, ind_box(minind)'];
+% %         end
+% %         min_error_ind = [min_error_ind, ind_box'];
+% %     end
+% % end
+% % 
+% % 
+% % %get k elements with lowest reprError that do fulfil above condition
+% % %[~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
+% % fprintf('# selected %d landmarks. %d was target.\n\n', length(min_error_ind), num_landmarks ); 
+% % 
+% % %get final filtered indices and landmarks
+% % 
+% % ind_filt = ind_valid(min_error_ind); 
+%%%%%%%%%debug
+ind_filt = ind_valid;
+%%%%%%%%%%%%%
 xyzpoints = xyzpoints(ind_filt,:); 
 end
 

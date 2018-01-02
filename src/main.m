@@ -36,7 +36,7 @@ elseif ds == 1
     images = dir([malaga_path ...
         '/malaga-urban-dataset-extract-07_rectified_800x600_Images']);
     left_images = images(3:2:end);
-    last_frame = 1000; %length(left_images);
+    last_frame = length(left_images);
     K = [621.18428 0 404.0076
         0 621.18428 309.05989
         0 0 1];

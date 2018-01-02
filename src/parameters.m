@@ -205,9 +205,9 @@ switch(ds)
         processFrame.reboot.landmark_trigger = 40;
         processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
         processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
-        processFrame.reboot.triang.radius_threshold = 60;
+        processFrame.reboot.triang.radius_threshold = 80;
         processFrame.reboot.triang.min_distance_threshold = 2;
-        processFrame.reboot.triang.min_landmark_ratio = 0.30;
+        processFrame.reboot.triang.min_landmark_ratio = 0.15;
 
    
     %*********************************************************************
