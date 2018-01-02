@@ -166,18 +166,18 @@ switch(ds)
         %*********** PROCESS FRAME ****************************************
 
         % isClose fct
-        processFrame.is_close.delta = 6; %TUNE
+        processFrame.is_close.delta = 12; %TUNE
 
         % ransac inside of runP3PandRANSAC
-        processFrame.p3p_ransac.num_iteration = 300;
-        processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
-        processFrame.p3p_ransac.min_inlier = 8;
+        processFrame.p3p_ransac.num_iteration = 600;
+        processFrame.p3p_ransac.pixel_tolerance = 10;                        % 2 init, better
+        processFrame.p3p_ransac.min_inlier = 3;
 
         % triangulation
         processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
         processFrame.triang.rep_e_threshold = 20;                           %init 3 % max allowed reprojection error in triangulation
         processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
-        processFrame.triang.min_distance_threshold = 0.1;                   % min z-distance in front of cam (not scaled)  
+        processFrame.triang.min_distance_threshold = 10;                   % min z-distance in front of cam (not scaled)  
         processFrame.triang.num_landmarks_goal = 150;                       % average number of landmarks to achieve
         processFrame.triang.excess_num_landmarks = 30;                      % constant number of triangulated landmarks.
         processFrame.triang.num_landmarks_margin = 0.7;                     % when landmarks fall below num_landmarks_margin*num_landmarks_goal, new landmarks are triangulated
@@ -190,7 +190,7 @@ switch(ds)
         processFrame.harris.filter_size = 5;                                %must be odd
 
         % nonMaxSupression
-        processFrame.select_keypoints.delta = 15;                            % online: 8
+        processFrame.select_keypoints.delta = processFrame.is_close.delta;                            % online: 8
         processFrame.select_keypoints.nbr_pts = 500;
    
     %*********************************************************************

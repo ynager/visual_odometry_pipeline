@@ -25,11 +25,12 @@ ind_valid = find(~invalid);
 %get ratio of useful landmarks
 ratio = length(ind_valid)/length(invalid);
 
-n_bins = 10;
-max_landmarks_per_bin = 10; 
+n_bins = 3;
+max_landmarks_per_bin = 50; 
 edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
+edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
 edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
-
+edges_y = [edges_y(1:n_bins) cameraParams.ImageSize(1)];
 ind_filt = []; 
 
 Cx = discretize(keypoints(ind_valid,1), edges_x); 
@@ -40,9 +41,12 @@ for i = 1:n_bins
         ind_box = find(and(Cx == i, Cy == j));
         n_in_box = length(ind_box); 
         n_landmarks = max_landmarks_per_bin - n_in_box;
-        if(n_landmarks > 0)
-            [~,minind] = mink(reprError(ind_box), n_landmarks,1);
-            min_error_ind = [min_error_ind, ind_box(minind)'];
+        if(n_landmarks < 0)
+%             [~,minind] = mink(reprError(ind_box), n_landmarks,1);
+            [~,kill_idx] = datasample(ind_box, abs(n_landmarks),'Replace',false);
+            ind_box(kill_idx)=[];
+%             min_error_ind = [min_error_ind, ind_box(minind)'];
+            min_error_ind = [min_error_ind, ind_box'];
         end
     end
 end
