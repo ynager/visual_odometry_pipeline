@@ -151,9 +151,12 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     % triangulate
     [xyzPoints, reprojectionErrors] = triangulate(inlierPoints_0, inlierPoints_1, M1', M2');
     
+    processFrame.reboot.triang.rep_e_threshold = bootstrap.triang.rep_e_threshold;
+    processFrame.reboot.triang.max_landmars_per_bin = bootstrap.triang.max_landmarks_per_bin; 
+    
     % filter
     [xyzPoints, ind_filt,~,ratio] =  ...
-        getFilteredLandmarks(xyzPoints, inlierPoints_1.Location, reprojectionErrors, orient, loc,  processFrame.reboot.triang.radius_threshold, processFrame.reboot.triang.min_distance_threshold, bootstrap.triang.rep_e_threshold, bootstrap.triang.num_landmarks_bootstrap, cameraParams);
+        getFilteredLandmarks(xyzPoints, inlierPoints_1.Location, reprojectionErrors, orient, loc,  processFrame.reboot.triang, cameraParams);
 
     inlierPoints_0 = inlierPoints_0(ind_filt);
     inlierPoints_1 = inlierPoints_1(ind_filt);
