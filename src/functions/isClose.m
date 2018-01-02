@@ -13,7 +13,10 @@ isclose = zeros(query_l,1);
 for i=1:query_l
     for j=1:reference_l
         
-        isclose(i) = (query(i,1)-reference(j,1))^2 + (query(i,2)-reference(j,2))^2 < delta^2; 
+        if ((query(i,1)-reference(j,1))^2 + (query(i,2)-reference(j,2))^2) < delta^2
+            isclose(i) = true; 
+            break; 
+        end
         
     end
 end
