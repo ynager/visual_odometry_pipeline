@@ -15,8 +15,8 @@ debug.print_lsqnonlin = false;
 debug.keyboard_interrupt = false; 
 
 %********* plot parameters ************
-plotParams.record_video = false; 
-plotParams.video_framerate = 5; 
+plotParams.record_video = true; 
+plotParams.video_framerate = 3; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true;
 
@@ -150,7 +150,7 @@ switch(ds)
         % BOOTSTRAP images
         bootstrap.init.first_location = [0, 0, 1];                          % bootstrap is accepted if close to this location
         bootstrap.init.first_location = bootstrap.init.first_location./norm(bootstrap.init.first_location);
-        bootstrap.images = [1,6];                                           % used bootstrap frames
+        bootstrap.images = [1,4];                                           % used bootstrap frames
         
         % feature detection method
         bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
