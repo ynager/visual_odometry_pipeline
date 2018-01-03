@@ -16,7 +16,7 @@ function undist_image = loadImage(ds, i, cameraParams)
     elseif ds == 4
         image = im2uint8(rgb2gray(imread(sprintf('../datasets/alpstrasse/images/img_%05d.png',i))));
     elseif ds == 5
-        image = im2uint8(rgb2gray(imread(sprintf('../datasets/sesseli/images/img_%05d.png',i))));
+        image = im2uint8(rgb2gray(imread(sprintf('../datasets/alpstrasse/images/img_%05d.png',i))));
     else
         im = sprintf('/images/img_%05d.png',i); 
         loc = strcat('../datasets/', ds, im); 
