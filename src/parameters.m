@@ -1,7 +1,7 @@
 % Parameters File
 
-%********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: sessli)
-ds = 4;
+%********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: alpstrasse_long 6: indoor)
+ds = 6;
 
 %********* debugging (printouts) *********
 debug.print_tracking = true;                                                %for Tracking in processFrame
@@ -142,6 +142,78 @@ processFrame.reboot.triang.max_landmarks_per_bin = 10;
 %***********PARAMETER DATASET SPECIFIC**************
 
 switch(ds)
+    %*********************************************************************
+    %******  INDOOR ****************************************************    
+    case 6
+        
+        %*********** BOOTSTRAP ******************************************
+        % BOOTSTRAP images
+        bootstrap.init.first_location = [0, 0, 1];                          % bootstrap is accepted if close to this location
+        bootstrap.init.first_location = bootstrap.init.first_location./norm(bootstrap.init.first_location);
+        bootstrap.images = [1,6];                                           % used bootstrap frames
+        
+        % feature detection method
+        bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
+            
+        % nonMaxSupression
+        bootstrap.select_keypoints.delta = 8;  %TUNE                        % online: 8
+        bootstrap.select_keypoints.nbr_pts = 800; %TUNE                    
+                
+        % KLT method             
+        bootstrap.klt.MaxBidirectionalError = 0.3;                          %5 % if inf, is not calculated
+                
+        % estimate fundamental matrix (eFm)
+        bootstrap.eFm.ransac.numTrials = 1000;                             %ransac inside of estimateFundamentalMatrix
+        bootstrap.eFm.ransac.distanceThreshold = 0.6;                      % LARGER THAN OTHER DATASETS
+        bootstrap.eFm.ransac.inlierRatio = 0.55;                            
+             
+        % landmark filter
+        bootstrap.triang.radius_threshold = 250;
+        bootstrap.triang.min_distance_threshold = 2; 
+        bootstrap.triang.max_landmarks_per_bin = 10; 
+        bootstrap.triang.min_landmark_ratio = 0.60; %0.72;                 % LOOP in bootstrap
+        bootstrap.triang.usegrid = false;
+        
+        %*********** PROCESS FRAME ****************************************
+
+        % isClose fct
+        processFrame.is_close.delta = 8; %TUNE
+
+        % ransac inside of runP3PandRANSAC
+        processFrame.p3p_ransac.num_iteration = 600;
+        processFrame.p3p_ransac.pixel_tolerance = 10;                        % 2 init, better
+        processFrame.p3p_ransac.min_inlier = 3;
+
+        % triangulation
+        processFrame.triang.alpha_threshold = [deg2rad(3), deg2rad(40)];    % 20 init
+        processFrame.triang.rep_e_threshold = 20;                          %init 3 % max allowed reprojection error in triangulation
+        processFrame.triang.radius_threshold = 250;                         % max allowable radius from cam (not scaled) 
+        processFrame.triang.min_distance_threshold = 2;                   % min z-distance in front of cam (not scaled)  
+        processFrame.triang.max_landmarks_per_bin = 10; 
+        processFrame.triang.min_landmarks_threshold = 105;                 % triangulate again when #landmarks < min_landmarks_threshold
+        processFrame.triang.usegrid = true;
+
+        
+        % detect new candidate kp
+        processFrame.max_candidate_keypoints = 800;                        %no new keypoints are added if above max 
+            
+        % harris
+        processFrame.harris.min_quality_process = 1e-6;
+        processFrame.harris.filter_size = 5;                                %must be odd
+
+        % nonMaxSupression
+        processFrame.select_keypoints.delta = processFrame.is_close.delta;                            % online: 8
+        processFrame.select_keypoints.nbr_pts = 500;
+        
+        % re-bootstrap
+        processFrame.reboot.landmark_trigger = 40;
+        processFrame.reboot.stepsize = 2;                                   %bootstrap over 'stepsize' images-difference
+        processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
+        processFrame.reboot.triang.radius_threshold = 250;
+        processFrame.reboot.triang.min_distance_threshold = 2;
+        processFrame.reboot.triang.min_landmark_ratio = 0.15;
+        processFrame.reboot.triang.usegrid = false;
+    
     %*********************************************************************
     %******  ALPSTRASSE ****************************************************    
     case 4

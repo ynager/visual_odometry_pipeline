@@ -22,8 +22,7 @@ if ds == 0
     last_frame = 4540;
     K = [7.188560000000e+02 0 6.071928000000e+02
         0 7.188560000000e+02 1.852157000000e+02
-        0 0 1];
-    
+        0 0 1];    
     % create cameraParams object
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     cameraParams.ImageSize = [376, 1241]; 
@@ -39,13 +38,11 @@ elseif ds == 1
     last_frame = length(left_images);
     K = [621.18428 0 404.0076
         0 621.18428 309.05989
-        0 0 1];
-    
+        0 0 1];    
     % create cameraParams object
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     clear K;
-    cameraParams.ImageSize = [600, 800];
-    
+    cameraParams.ImageSize = [600, 800];    
     %no ground truth available
     ground_truth = [0, 0];
     
@@ -54,11 +51,9 @@ elseif ds == 2
     parking_path = '../datasets/parking';
     assert(exist(parking_path, 'dir') ~= 0, 'Parking dataset not found');
     last_frame = 598;
-    K = load([parking_path '/K.txt']);
-     
+    K = load([parking_path '/K.txt']);     
     ground_truth = load([parking_path '/poses.txt']);
-    ground_truth = ground_truth(:, [end-8 end]);
-    
+    ground_truth = ground_truth(:, [end-8 end]);    
     % create cameraParams object
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     clear K;
@@ -70,11 +65,9 @@ elseif ds == 4
     assert(exist(alp_path, 'dir') ~= 0, 'alp dataset not found');
     last_frame = 385;
     ground_truth = [0, 0]; 
-    load('calibration/cameraParams/cameraParams_iphone6.mat');
-    
+    load('calibration/cameraParams/cameraParams_iphone6.mat');    
     % create cameraParams object
-    cameraParams.ImageSize = [540, 960];
-    
+    cameraParams.ImageSize = [540, 960];    
     %no ground truth available
     ground_truth = [0, 0];    
     
@@ -84,13 +77,23 @@ elseif ds == 5
     assert(exist(alp_path, 'dir') ~= 0, 'alp dataset not found');
     last_frame = 1360;
     ground_truth = [0, 0]; 
-    load('calibration/cameraParams/cameraParams_iphone6.mat');
-    
+    load('calibration/cameraParams/cameraParams_iphone6.mat');    
     % create cameraParams object
-    cameraParams.ImageSize = [540, 960];
-    
+    cameraParams.ImageSize = [540, 960];    
     %no ground truth available
     ground_truth = [0, 0];    
+    
+elseif ds == 6
+    % Path containing the many files of indoors.
+    alp_path = '../datasets/indoor';
+    assert(exist(alp_path, 'dir') ~= 0, 'indoor dataset not found');
+    last_frame = 299;
+    ground_truth = [0, 0]; 
+    load('calibration/cameraParams/cameraParams_iphone6.mat');    
+    % create cameraParams object
+    cameraParams.ImageSize = [540, 960];    
+    %no ground truth available
+    ground_truth = [0, 0];      
     
 else
     
