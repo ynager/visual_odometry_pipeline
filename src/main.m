@@ -87,7 +87,7 @@ elseif ds == 6
     % Path containing the many files of indoors.
     alp_path = '../datasets/indoor';
     assert(exist(alp_path, 'dir') ~= 0, 'indoor dataset not found');
-    last_frame = 299;
+    last_frame = 290;
     ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');    
     % create cameraParams object

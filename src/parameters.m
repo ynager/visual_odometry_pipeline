@@ -153,7 +153,7 @@ switch(ds)
         bootstrap.images = [1,4];                                           % used bootstrap frames
         
         % feature detection method
-        bootstrap.harris.min_quality = 1e-6; %TUNE                      % 0.001 init
+        bootstrap.harris.min_quality = 1e-5; %TUNE                      % 0.001 init
             
         % nonMaxSupression
         bootstrap.select_keypoints.delta = 8;  %TUNE                        % online: 8
@@ -195,10 +195,10 @@ switch(ds)
 
         
         % detect new candidate kp
-        processFrame.max_candidate_keypoints = 800;                        %no new keypoints are added if above max 
+        processFrame.max_candidate_keypoints = 500;                        %no new keypoints are added if above max 
             
         % harris
-        processFrame.harris.min_quality_process = 1e-6;
+        processFrame.harris.min_quality_process = 1e-5;
         processFrame.harris.filter_size = 5;                                %must be odd
 
         % nonMaxSupression
