@@ -64,6 +64,32 @@ elseif ds == 2
     clear K;
     cameraParams.ImageSize = [480, 640]; 
     
+elseif ds == 4
+    % Path containing the many files of alpstrasse.
+    alp_path = '../datasets/alpstrasse';
+    assert(exist(alp_path, 'dir') ~= 0, 'alp dataset not found');
+    last_frame = 385;
+    ground_truth = [0, 0]; 
+    load('calibration/cameraParams/cameraParams_iphone6.mat');
+    
+    % create cameraParams object
+    cameraParams.ImageSize = [540, 960];
+    
+    %no ground truth available
+    ground_truth = [0, 0];    
+    
+elseif ds == 5
+    % Path containing the many files of alpstrasse.
+    alp_path = '../datasets/sesseli';
+    assert(exist(alp_path, 'dir') ~= 0, 'sesseli dataset not found');
+    last_frame = 221;
+    ground_truth = [0, 0]; 
+    load('calibration/cameraParams/cameraParams_iphone6.mat');    
+    % create cameraParams object
+    cameraParams.ImageSize = [540, 960];    
+    %no ground truth available
+    ground_truth = [0, 0];     
+    
 else
     
     last_frame = 1700; 
