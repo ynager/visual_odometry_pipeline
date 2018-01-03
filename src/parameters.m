@@ -1,7 +1,7 @@
 % Parameters File
 
 %********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: sessli)
-ds = 5;
+ds = 4;
 
 %********* debugging (printouts) *********
 debug.print_tracking = true;                                                %for Tracking in processFrame
@@ -223,7 +223,7 @@ switch(ds)
         % BOOTSTRAP images
         bootstrap.init.first_location = [0, 0, 1];                          % bootstrap is accepted if close to this location
         bootstrap.init.first_location = bootstrap.init.first_location./norm(bootstrap.init.first_location);
-        bootstrap.images = [1,3];                                           % used bootstrap frames
+        bootstrap.images = [766 768];%[1,3];                                           % used bootstrap frames
         
         % feature detection method
         bootstrap.harris.min_quality = 1e-4; %TUNE                      % 0.001 init
@@ -244,7 +244,7 @@ switch(ds)
         bootstrap.triang.radius_threshold = 250;
         bootstrap.triang.min_distance_threshold = 2; 
         bootstrap.triang.max_landmarks_per_bin = 10; 
-        bootstrap.triang.min_landmark_ratio = 0.70; %0.72;                 % LOOP in bootstrap
+        bootstrap.triang.min_landmark_ratio = 0.60; %0.72;                 % LOOP in bootstrap
         bootstrap.triang.usegrid = false;
         
         %*********** PROCESS FRAME ****************************************
@@ -280,9 +280,9 @@ switch(ds)
         
         % re-bootstrap
         processFrame.reboot.landmark_trigger = 40;
-        processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
+        processFrame.reboot.stepsize = 2;                                   %bootstrap over 'stepsize' images-difference
         processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
-        processFrame.reboot.triang.radius_threshold = 80;
+        processFrame.reboot.triang.radius_threshold = 250;
         processFrame.reboot.triang.min_distance_threshold = 2;
         processFrame.reboot.triang.min_landmark_ratio = 0.15;
         processFrame.reboot.triang.usegrid = false;
