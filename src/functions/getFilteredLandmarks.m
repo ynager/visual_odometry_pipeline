@@ -34,11 +34,8 @@ if triangparams.usegrid
     max_landmarks_per_bin = triangparams.max_landmarks_per_bin;
     
     n_bins = 10;
-    edges_x = 1:fix(cameraParams.ImageSize(2)/n_bins):cameraParams.ImageSize(2); 
-    edges_x = [edges_x(1:n_bins) cameraParams.ImageSize(2)];
-    edges_y = 1:fix(cameraParams.ImageSize(1)/n_bins):cameraParams.ImageSize(1); 
-    edges_y = [edges_y(1:n_bins) cameraParams.ImageSize(1)];
-    ind_filt = []; 
+    edges_x = 1:cameraParams.ImageSize(2)/n_bins:cameraParams.ImageSize(2); 
+    edges_y = 1:cameraParams.ImageSize(1)/n_bins:cameraParams.ImageSize(1); 
 
     Cx = discretize(keypoints(ind_valid,1), edges_x); 
     Cy = discretize(keypoints(ind_valid,2), edges_y);
@@ -49,10 +46,11 @@ if triangparams.usegrid
             n_in_box = length(ind_box); 
             n_landmarks = max_landmarks_per_bin - n_in_box;
             if(n_landmarks < 0)
-    %             [~,minind] = mink(reprError(ind_box), n_landmarks,1);
+    %               [~,minind] = mink(reprError(ind_box), n_landmarks,1);
+    %               min_error_ind = [min_error_ind, ind_box(minind)'];
                 [~,kill_idx] = datasample(ind_box, abs(n_landmarks),'Replace',false);
                 ind_box(kill_idx)=[];
-    %             min_error_ind = [min_error_ind, ind_box(minind)'];
+ 
             end
             min_error_ind = [min_error_ind, ind_box'];
         end
