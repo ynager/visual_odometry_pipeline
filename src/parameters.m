@@ -1,7 +1,7 @@
 % Parameters File
 
 %********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: alpstrasse_long 6: indoor)
-ds = 6;
+ds = 2;
 
 %********* debugging (printouts) *********
 debug.print_tracking = true;                                                %for Tracking in processFrame
@@ -16,7 +16,7 @@ debug.keyboard_interrupt = false;
 
 %********* plot parameters ************
 plotParams.record_video = true; 
-plotParams.video_framerate = 3; 
+plotParams.video_framerate = 5; 
 plotParams.plot_p3p_outliers = true; 
 plotParams.plot_invalid_ckeypoints = true;
 
@@ -472,7 +472,7 @@ switch(ds)
         
         % ransac inside of runP3PandRANSAC
         processFrame.p3p_ransac.num_iteration = 600;
-        processFrame.p3p_ransac.pixel_tolerance = 5;                        % 2 init, better
+        processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 8;
 
         % triangulation
@@ -542,7 +542,7 @@ switch(ds)
         
         % ransac inside of runP3PandRANSAC
         processFrame.p3p_ransac.num_iteration = 1000;
-        processFrame.p3p_ransac.pixel_tolerance = 3;                        % 2 init, better
+        processFrame.p3p_ransac.pixel_tolerance = 2.5;                        % 2 init, better
         processFrame.p3p_ransac.min_inlier = 3;
 
         % triangulation
@@ -563,7 +563,7 @@ switch(ds)
         processFrame.select_keypoints.delta = 15;                           % online: 8
         processFrame.select_keypoints.nbr_pts = 200;
         
-        processFrame.reboot.landmark_trigger = 30;
+        processFrame.reboot.landmark_trigger = 45;
         processFrame.reboot.stepsize = 3;                                   %bootstrap over 'stepsize' images-difference
         processFrame.reboot.eFm.ransac.inlierRatio = 0.7;
         processFrame.reboot.triang.radius_threshold = 200;
