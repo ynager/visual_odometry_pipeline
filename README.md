@@ -23,3 +23,9 @@ MATLAB 2017b with
 
 3.) run main.m to start the pipeline
 
+### Screencasts ###
+
+Please find the link to the screencasts of this pipeline applied to six different datasets below:
+
+https://drive.google.com/open?id=1AHjNfthDAVzBY2az-X1W9HUt4fE05oeL
+
