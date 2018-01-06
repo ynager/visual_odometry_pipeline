@@ -53,6 +53,7 @@ run('parameters.m');
 
 % track keypoints over frame
 [tracked_kp,kp_validity] = step(KLT_keypointsTracker,I_curr);
+
 % track candidate keypoints over frame
 [tracked_ckp,ckp_validity] = step(KLT_candidateKeypointsTracker,I_curr);
 if debug.print_tracking
@@ -88,6 +89,7 @@ for i = 1:processFrame.localization.numTrials
         
     currRT = [orient,loc];
     
+    % retry if empty
     if(isempty(loc) || isempty(orient))
         continue
     end
@@ -115,12 +117,14 @@ if debug.print_p3p
     fprintf('\nFraction of inliers(p3p) of tracked kp: %.2f',sum(inlier_valid)/length(kp_validity));
 end
 
-%non-linear optimization of R and T
+% non-linear optimization of R and T
 % represent R and T as twist vector to be useful in lsqnonlin
 currRT_twist = HomogMatrix2twist([currRT;[0 0 0 1]]);
+
 % use lonlinear optimization (least squares) to minimize reprojection error
 %initialise for lsqnonlin
 f=@(RT_twist)rep_e_nonlinopt(RT_twist,double(kp_for_p3p(inlier_valid,:)), double(landmarks_for_p3p(inlier_valid,:)), cameraParams);
+
 %set options for lsqnonlin
 if debug.print_lsqnonlin
     options = optimoptions(@lsqnonlin,'Display','iter','FunValCheck','on','MaxIter',400);
@@ -198,7 +202,6 @@ end
 % get p3p outlier keypoints and landmarks
 globalData.debug.p3p_outlier_keypoints = kp_for_p3p(~inlier_valid,:); 
 globalData.debug.p3p_outlier_landmarks = landmarks_for_p3p(~inlier_valid,:); 
-
 
 end
 

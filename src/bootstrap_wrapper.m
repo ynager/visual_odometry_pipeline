@@ -83,7 +83,6 @@ if(bootstrap.use_KLT)
     %convert to cornerPoint object to match template 
     matchedPoints_1 = cornerPoints(matchedPoints_1); 
 
-
 % USE FEATURE MATCHING
 else  
     points_1 = selectKeypoints(points_1,bootstrap.select_keypoints.delta, bootstrap.select_keypoints.nbr_pts, bootstrap.select_keypoints.viaMatrix_method);
@@ -109,7 +108,7 @@ end
 plotMatches(matchedPoints_0, matchedPoints_1, I_0, I_1); 
 fprintf('\nFeature Matches found: %d\n', length(matchedPoints_0));
 
-% BOOTSTRAP LOOP*************************************************
+% BOOTSTRAP LOOP *************************************************
 for bootstrap_ctr = 1:bootstrap.loop.numTrials
     
     % ESTIMATE FUNDAMENTAL MATRIX
@@ -147,9 +146,6 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
     loc = -orient*loc_C_W;
 
     fprintf('\nEstimated Location: x=%.2f  y=%.2f  z=%.2f',loc(:));
-    
-    %TODO put in a safety measurement? like count pts in front of cam?
-
     %% Triangulate to get 3D points
 
     % get rotation matrix and translation vector from pose orientation and location    
@@ -178,7 +174,7 @@ for bootstrap_ctr = 1:bootstrap.loop.numTrials
         fprintf('\ntoo many rejected landmarks, start bootstrap again, ratio: %.2f',ratio); 
     end
 
-end%*******************************************************
+end %*******************************************************
 
 
 %% Generate initial state
@@ -206,24 +202,20 @@ currState.candidate_kp = candidate_kp;
 currState.first_obs = candidate_kp;
 currState.pose_first_obs = repmat([orient(:)', loc(:)'], [length(candidate_kp),1]);
 
-
-%% populate viewsets
+%% update globalData
 viewId = 1; 
 globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', eye(3), 'Location', [0 0 0], 'Points', inlierPoints_0);
 
 viewId = 2;
 globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', orient, 'Location', loc', 'Points', inlierPoints_1);
 
-% Store the point matches between the previous and the current views.
-% globalData.vSet = addConnection(globalData.vSet, viewId-1, viewId, 'Matches', indexPairs);
-
-%% update landmarks and actualVSet in globalData
+% update landmarks and actualVSet in globalData
 globalData.landmarks = xyzPoints; 
 
 %% Plotting
 
 %Plot bootstrap matches
-plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
+%plotMatches(inlierPoints_0, inlierPoints_1, I_0, I_1);  
 
 end
 

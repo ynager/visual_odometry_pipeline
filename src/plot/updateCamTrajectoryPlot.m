@@ -4,7 +4,7 @@ warning off;
 sf = globalData.scale_factor;
 
 % axis 1 ****************************************************
-axes(plotHandles.axes1);
+%axes(plotHandles.axes1);
 % Plot estimated camera location and orientation
 loc = globalData.vSet.Views.Location{viewId}*sf; 
 orient = globalData.vSet.Views.Orientation{viewId};

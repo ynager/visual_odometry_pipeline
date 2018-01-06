@@ -3,22 +3,25 @@
 %********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: alpstrasse_long 6: indoor)
 ds = 2;
 
+%********* plot parameters ************
+plotParams.plot_on = true;          % Turn off plotting for speed
+plotParams.record_video = false; 
+plotParams.video_framerate = 5; 
+plotParams.plot_p3p_outliers = true; 
+plotParams.plot_invalid_ckeypoints = true;
+
 %********* debugging (printouts) *********
-debug.print_tracking = true;                                                %for Tracking in processFrame
-debug.print_p3p = true;                                                     %for p3p in processFrame (inlier and delta_loc)
-debug.print_triangulation = true;                                           % for alpha value based triangulation in processFrame
-debug.print_new_landmarks = true;                                           % for nbr of new landmarks in triangulation
-debug.print_new_features = true;                                            % for detection of new keypoints
+debug.print_tracking = false;                                                %for Tracking in processFrame
+debug.print_p3p = false;                                                     %for p3p in processFrame (inlier and delta_loc)
+debug.print_triangulation = false;                                           % for alpha value based triangulation in processFrame
+debug.print_new_landmarks = false;                                           % for nbr of new landmarks in triangulation
+debug.print_new_features = false;                                            % for detection of new keypoints
 debug.print_lsqnonlin = false;
 
 % interruption after each frame
 debug.keyboard_interrupt = false; 
 
-%********* plot parameters ************
-plotParams.record_video = true; 
-plotParams.video_framerate = 5; 
-plotParams.plot_p3p_outliers = true; 
-plotParams.plot_invalid_ckeypoints = true;
+
 
 %*********tuning parameters***************
 

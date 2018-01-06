@@ -18,9 +18,9 @@ invalid_3 = reprError > rep_e_threshold;
  
 invalid = invalid_3 | invalid_2 | invalid_1;
  
-fprintf('\n\n# triang invalid due to distance behind threshold: %d\n', sum(invalid_1)); 
-fprintf('# triang invalid due to exceeding max radius: %d\n', sum(invalid_2)); 
-fprintf('# triang invalid due to repr error above threshold: %d\n', sum(invalid_3)); 
+%fprintf('\n\n# triang invalid due to distance behind threshold: %d\n', sum(invalid_1)); 
+%fprintf('# triang invalid due to exceeding max radius: %d\n', sum(invalid_2)); 
+%fprintf('# triang invalid due to repr error above threshold: %d\n', sum(invalid_3)); 
 
 
 %get indices of valid/invalid points
@@ -56,10 +56,9 @@ if triangparams.usegrid
         end
     end
 
-
     %get k elements with lowest reprError that do fulfil above condition
     %[~,min_error_ind] = mink(reprError(ind_valid), num_landmarks,1);
-    fprintf('# selected %d from %d landmarks\n\n', length(min_error_ind), length(xyzpoints)); 
+    %fprintf('# selected %d from %d landmarks\n\n', length(min_error_ind), length(xyzpoints)); 
 
     %get final filtered indices and landmarks
 

@@ -4,7 +4,7 @@ clear all;
 close all;
 run('parameters.m');
 
-%add path
+%add paths
 addpath('../src')
 addpath('../datasets')
 addpath('plot')
@@ -13,6 +13,7 @@ addpath('functions/NonLinLS')
 addpath('functions/triangulation')
 
 %get ground truth, K, and last frame index from database
+% Kitti
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
     kitti_path = '../datasets/kitti';
@@ -27,7 +28,8 @@ if ds == 0
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     cameraParams.ImageSize = [376, 1241]; 
     clear K;
-    
+
+% Malaga    
 elseif ds == 1
     % Path containing the many files of Malaga 7.
     malaga_path = '../datasets/malaga';
@@ -45,7 +47,8 @@ elseif ds == 1
     cameraParams.ImageSize = [600, 800];    
     %no ground truth available
     ground_truth = [0, 0];
-    
+
+% Parking
 elseif ds == 2
     % Path containing images, depths and all...
     parking_path = '../datasets/parking';
@@ -58,7 +61,8 @@ elseif ds == 2
     cameraParams = cameraParameters('IntrinsicMatrix', K);
     clear K;
     cameraParams.ImageSize = [480, 640]; 
-    
+
+% Swiss Alps 1 
 elseif ds == 4
     % Path containing the many files of alpstrasse.
     alp_path = '../datasets/alpstrasse';
@@ -70,7 +74,8 @@ elseif ds == 4
     cameraParams.ImageSize = [540, 960];    
     %no ground truth available
     ground_truth = [0, 0];    
-    
+
+% Swiss Alps 2
 elseif ds == 5
     % Path containing the many files of alpstrasse LONG.
     alp_path = '../datasets/alpstrasse';
@@ -82,7 +87,8 @@ elseif ds == 5
     cameraParams.ImageSize = [540, 960];    
     %no ground truth available
     ground_truth = [0, 0];    
-    
+
+% Home Sweet Home    
 elseif ds == 6
     % Path containing the many files of indoors.
     alp_path = '../datasets/indoor';
@@ -95,12 +101,10 @@ elseif ds == 6
     %no ground truth available
     ground_truth = [0, 0];      
     
-else
-    
+else  
     last_frame = 1700; 
     ground_truth = [0, 0]; 
-    load('calibration/cameraParams/cameraParams_iphone6.mat');
-    
+    load('calibration/cameraParams/cameraParams_iphone6.mat');  
 end
 
 %create global data object
@@ -113,7 +117,6 @@ globalData.scale_factor = 1;            % init scale factor
 %create debug data
 globalData.debug.p3p_outlier_keypoints = []; 
 globalData.debug.ckeypoints_invalid = []; 
-
 
 %put ground truth info into a realVSet
 for i = 1:size(ground_truth,1)
@@ -141,21 +144,19 @@ for i = 1:bootstrap.init.numTrials
 end
 
 %% Setup Camera/Trajectory plot
-plotHandles = setupCamTrajectoryPlot(globalData); 
+if plotParams.plot_on
+    plotHandles = setupCamTrajectoryPlot(globalData);
+end
 
 % update Camera/Trajectory plot
-I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
-updateCamTrajectoryPlot(viewId, globalData, currState, I_1, plotHandles, plotParams); 
+if plotParams.plot_on
+    I_1 = loadImage(ds,bootstrap.images(2), cameraParams);
+    updateCamTrajectoryPlot(viewId, globalData, currState, I_1, plotHandles, plotParams);
+end
 
 %% Continuous operation
 
-% TODO: fill gap between bootstrap and continuous operation:
-% set state_curr to last bootstrap step, I_curr to last bootstrap image
-% etc.
-
 % initialize Kanade-Lucas-Tomasi (KLT) point tracker for keypoints and
-% candidate keypoints
-% TODO: set backtracking in KLT flag true!!
 KLT_keypointsTracker = vision.PointTracker('NumPyramidLevels', processFrame.klt.NumPyramidLevels, ...
                                 'MaxBidirectionalError', processFrame.klt.MaxBidirectionalError, ...
                                 'BlockSize', processFrame.klt.BlockSize, ...
@@ -184,23 +185,18 @@ for i = range
     prevState = currState;
     I_curr = loadImage(ds,i, cameraParameters);
     
-    % get current state (containing all state info) and current pose
-    
-%     %deeebuuuuug
-%     if mod(i,8)==0
-%         RE_BOOTSTRAP=true;
-%     end
-    
+    % run processFrame
     if not(RE_BOOTSTRAP)
         [currState, currRT, globalData] = processFrame_wrapper(I_curr, prevState, ...
                                             KLT_keypointsTracker, ...
                                             KLT_candidateKeypointsTracker, ...
                                             cameraParams, globalData);
     else
-        %get base info
+        % get base info
         I_base = loadImage(ds,i-processFrame.reboot.stepsize, cameraParameters);
         base_orient = globalData.vSet.Views.Orientation{end-(processFrame.reboot.stepsize-1)};
         base_loc = globalData.vSet.Views.Location{end-(processFrame.reboot.stepsize-1)}';
+       
         % re-bootstrap
         [currState, currRT, globalData] = re_bootstrap(I_base, base_orient, base_loc, I_curr, prevState, ...
                                             KLT_keypointsTracker, ...
@@ -208,23 +204,28 @@ for i = range
                                             cameraParams, globalData);
         RE_BOOTSTRAP = false;
     end
-                                               
+        
+    % update globalData viewset
     viewId = i - bootstrap.images(2) + 2; 
     globalData.vSet = addView(globalData.vSet, viewId, 'Orientation', currRT(:,1:3), 'Location', currRT(:,4)', 'Points', currState.keypoints);
     
-    updateCamTrajectoryPlot(viewId, globalData, currState, I_curr, plotHandles, plotParams); 
+    % update plots
+    if plotParams.plot_on
+        updateCamTrajectoryPlot(viewId, globalData, currState, I_curr, plotHandles, plotParams); 
+    end
         
     if debug.keyboard_interrupt
         keyboard
     end
-    pause(0.1)
+    pause(0.01)
     
-    %update scale factor every now and then
+    %update scale factor every 10th frame
     if(mod(i,10) == 0 && globalData.actualVSet.NumViews >= i)
        globalData.scale_factor = getScaleFactor(globalData, bootstrap.images);
     end
 end
 
+% close video object
 if plotParams.record_video
     close(plotHandles.writerObj); 
 end
@@ -233,37 +234,4 @@ end
 save([num2str(ds) '_globaldata'],'globalData')
 
 load handel.mat
-sound(y);
-
-    
-%% Questions
-
-% what additional feature should we implement?
-
-
-%% TODO general
-
-% in ransac in bootstrap (estimateFundamental_RANSAC) -> run ransac number
-% of times according to formula!
-
-% param tuning for all datasets!
-
-% maybe test p3p (should work though)
-
-% maybe test landmarkfilter (should work though)
-
-% handle failed localization in p3p ransac
-
-% bootsrap kp candidates -> maybe search freshly on I1
-% candidate_kp -> new detection like in processFrame, not
-% outliers
-
-% dont do clac for img1 in bootstrap if not necessary
-
-% landmark filter: keep only ~300 best landmark/keypoints, all
-% other:discard
-
-%% Ideas
-
-% maybe when saving possible keypoints for later triangulation, only select k best
-               
+sound(y);               
