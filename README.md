@@ -23,15 +23,15 @@ MATLAB 2017b with
     visual_odometry_project/datasets directory. The directories must be renamed to 
     'kitti', 'malaga', and 'parking'. 
 
-3.) In src/parameters.m, select the dataset by setting the variable **ds** on line seven. 
+3.) In src/parameters.m, select the dataset by setting the variable **ds** at the beginning of the file. 
     Optionally, also change the pipeline parameters there.
 
 4.) Go into visual_odometry_project/src, and run main.m to start the pipeline.
 
 ### Screencasts ###
 
-Please find the link to the screencasts of this pipeline applied to six different 
-datasets below:
+Please find [here the screencasts](https://drive.google.com/open?id=1AHjNfthDAVzBY2az-X1W9HUt4fE05oeL
+) of this pipeline applied to six different datasets.
+Note that the built up map during the run is shown at the very end of the clips in more detail.
 
-https://drive.google.com/open?id=1AHjNfthDAVzBY2az-X1W9HUt4fE05oeL
 
