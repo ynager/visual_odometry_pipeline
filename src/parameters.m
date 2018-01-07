@@ -7,7 +7,7 @@
 ds = 1;
 
 %********* plot parameters ************
-plotParams.plot_on = false;          % Turn off plotting for speed
+plotParams.plot_on = true;          % Turn off plotting for speed
 plotParams.record_video = false; 
 plotParams.video_framerate = 5; 
 plotParams.plot_p3p_outliers = true; 
