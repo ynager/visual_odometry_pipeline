@@ -34,4 +34,8 @@ Please find [here the screencasts](https://drive.google.com/open?id=1AHjNfthDAVz
 ) of this pipeline applied to six different datasets.
 Note that the built up map during the run is shown at the very end of the clips in more detail.
 
+### Authors ###
+
+Yannik Nager & Thomas Eppenberger
+
 
