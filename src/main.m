@@ -4,6 +4,9 @@ clear all;
 close all;
 run('parameters.m');
 
+% automatically cd to /src directory
+cd(fileparts(which('visual_odometry_project/src/main.m')));
+
 %add paths
 addpath('../src')
 addpath('../datasets')
@@ -66,9 +69,8 @@ elseif ds == 2
 elseif ds == 4
     % Path containing the many files of alpstrasse.
     alp_path = '../datasets/alpstrasse';
-    assert(exist(alp_path, 'dir') ~= 0, 'alp dataset not found');
+    assert(exist(alp_path, 'dir') ~= 0, 'alpstrasse dataset not found');
     last_frame = 385;
-    ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');    
     % create cameraParams object
     cameraParams.ImageSize = [540, 960];    
@@ -79,9 +81,8 @@ elseif ds == 4
 elseif ds == 5
     % Path containing the many files of alpstrasse LONG.
     alp_path = '../datasets/alpstrasse';
-    assert(exist(alp_path, 'dir') ~= 0, 'alp dataset not found');
+    assert(exist(alp_path, 'dir') ~= 0, 'alpstrasse dataset not found');
     last_frame = 1360;
-    ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');    
     % create cameraParams object
     cameraParams.ImageSize = [540, 960];    
@@ -94,7 +95,6 @@ elseif ds == 6
     alp_path = '../datasets/indoor';
     assert(exist(alp_path, 'dir') ~= 0, 'indoor dataset not found');
     last_frame = 290;
-    ground_truth = [0, 0]; 
     load('calibration/cameraParams/cameraParams_iphone6.mat');    
     % create cameraParams object
     cameraParams.ImageSize = [540, 960];    
