@@ -36,7 +36,7 @@ Note that the built up map during the run is shown at the very end of the clips 
 
 ### Report ###
 
-(Report of the mini-project)[https://drive.google.com/open?id=1no9_dP-43lH_sDhUpEvRv7oo-2CCY0Ff].
+[Report of the mini-project](https://drive.google.com/open?id=1no9_dP-43lH_sDhUpEvRv7oo-2CCY0Ff).
 
 ### Authors ###
 
