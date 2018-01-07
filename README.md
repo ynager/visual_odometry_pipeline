@@ -33,6 +33,7 @@ MATLAB 2017b with
 Please find [here the screencasts](https://drive.google.com/open?id=1AHjNfthDAVzBY2az-X1W9HUt4fE05oeL
 ) of this pipeline applied to six different datasets.
 Note that the built up map during the run is shown at the very end of the clips in more detail.
+The pipeline runs at ~1.28Hz on a i-7 2.3GHz processor.
 
 ### Report ###
 
