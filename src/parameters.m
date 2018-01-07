@@ -1,10 +1,11 @@
 % Parameters File
 
-%********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: alpstrasse_long 6: indoor)
-ds = 2;
+%********* dataset *********** 
+% (0: kitti, 1: malaga, 2: parking, 4: Swiss Alps(1), 5: Swiss Alps(2), 6: Home Sweet Home)
+ds = 1;
 
 %********* plot parameters ************
-plotParams.plot_on = true;          % Turn off plotting for speed
+plotParams.plot_on = false;          % Turn off plotting for speed
 plotParams.record_video = false; 
 plotParams.video_framerate = 5; 
 plotParams.plot_p3p_outliers = true; 
@@ -218,7 +219,7 @@ switch(ds)
         processFrame.reboot.triang.usegrid = false;
     
     %*********************************************************************
-    %******  ALPSTRASSE ****************************************************    
+    %******  ALPSTRASSE 1 ****************************************************    
     case 4
         
         %*********** BOOTSTRAP ******************************************
@@ -290,7 +291,7 @@ switch(ds)
         processFrame.reboot.triang.usegrid = false;
         
     %*********************************************************************
-    %******  ALPSTRASSE LONG ****************************************************    
+    %******  ALPSTRASSE 2 ****************************************************    
     case 5
         
         %*********** BOOTSTRAP ******************************************
