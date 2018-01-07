@@ -1,6 +1,9 @@
 % Parameters File
 
-%********* dataset *********** (0: KITTI, 1: Malaga, 2: parking, 3: custom_1 4: alpstrasse 5: alpstrasse_long 6: indoor)
+%********* dataset ***********
+% possible ds values:
+% 0: KITTI, 1: Malaga, 2: Parking
+% 4: Swiss Alps One 5: Swiss Alps Two 6: Home Sweet Home)
 ds = 2;
 
 %********* plot parameters ************

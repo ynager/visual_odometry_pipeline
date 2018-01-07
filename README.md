@@ -17,15 +17,21 @@ MATLAB 2017b with
 
 ### How To Run The Pipeline ###
 
-1.) Clone the repository
+1.) Clone the repository.
 
-2.) in src/parameters.m, select the dataset by setting the variable ds
+2.) Download the standard datasets ([KITTI, Malaga, Parking](http://rpg.ifi.uzh.ch/teaching.html)) and copy them into the
+    visual_odometry_project/datasets directory. The directories must be renamed to 
+    'kitti', 'malaga', and 'parking'. 
 
-3.) run main.m to start the pipeline
+3.) In src/parameters.m, select the dataset by setting the variable **ds** on line seven. 
+    Optionally, also change the pipeline parameters there.
+
+4.) Go into visual_odometry_project/src, and run main.m to start the pipeline.
 
 ### Screencasts ###
 
-Please find the link to the screencasts of this pipeline applied to six different datasets below:
+Please find the link to the screencasts of this pipeline applied to six different 
+datasets below:
 
 https://drive.google.com/open?id=1AHjNfthDAVzBY2az-X1W9HUt4fE05oeL
 
