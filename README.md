@@ -1,18 +1,16 @@
-# Vision Algorithms for Mobile Robotics #
 ## Visual Odometry Pipeline ##
 
-The goal of this mini-project is to implement a simple, monocular, visual odometry (VO) pipeline 
-with the most essential features: initialization of 3D landmarks, keypoint tracking between two 
-frames, pose estimation using established 2D ↔ 3D correspondences, and triangulation of new 
-landmarks.
+A simple, monocular, visual odometry (VO) pipeline with the most essential features: 
+* initialization of 3D landmarks (8-Point algorithm, RANSAC)
+* keypoint tracking between two frames (Kanade-Lucas-Tomasi feature tracker)
+* pose estimation using established 2D ↔ 3D correspondences (p3p algorithm, RANSAC, nonlinear pose optimization)
+* triangulation of new landmarks.
 
 ### Prerequisites ###
 MATLAB 2017b with
 
 - Image Toolbox
-
 - Optimization Toolbox
-
 - Statistics Toolbox
 
 ### How To Run The Pipeline ###
@@ -35,11 +33,7 @@ Please find [here the screencasts](https://drive.google.com/open?id=1AHjNfthDAVz
 Note that the built up map during the run is shown at the very end of the clips in more detail.
 The pipeline runs at ~1.28Hz on a i-7 2.3GHz processor.
 
-### Report ###
-
-[Report of the mini-project](https://drive.google.com/open?id=1no9_dP-43lH_sDhUpEvRv7oo-2CCY0Ff).
-
-### Authors ###
+### Contributors ###
 
 Yannik Nager & Thomas Eppenberger
 
